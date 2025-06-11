@@ -1,10 +1,19 @@
 // leitor de qr code
 const qrcode = require('qrcode-terminal');
 const { Client, MessageMedia } = require('whatsapp-web.js');
-const client = new Client();
+const fs = require('fs');
+const SESSION_FILE_PATH = './session.json';
+let sessionData;
+if (fs.existsSync(SESSION_FILE_PATH)) {
+    sessionData = require(SESSION_FILE_PATH);
+}
+const client = new Client({
+    session: sessionData
+});
 // serviço de leitura do qr code
 client.on('qr', qr => {
     qrcode.generate(qr, {small: true});
+    console.log('QR Code gerado! Veja o terminal/log da Railway para escanear.');
 });
 // apos isso ele diz que foi tudo certo
 client.on('ready', () => {
@@ -166,4 +175,8 @@ client.on('message', async msg => {
         await client.sendMessage(userId, 'Se precisar de mais informações, é só me chamar!');
         return;
     }
+});
+
+client.on('authenticated', (session) => {
+    fs.writeFileSync(SESSION_FILE_PATH, JSON.stringify(session));
 });
