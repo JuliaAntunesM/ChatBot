@@ -19,6 +19,9 @@ app.get('/', (req, res) => {
     if (latestQr) {
         res.send(`
             <html>
+                <head>
+                    <meta http-equiv="refresh" content="2">
+                </head>
                 <body style='display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;'>
                     <h2>Escaneie o QR Code para conectar o WhatsApp</h2>
                     <img src="${latestQr}" />
