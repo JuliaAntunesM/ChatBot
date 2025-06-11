@@ -5,6 +5,7 @@ const fs = require('fs');
 const SESSION_FILE_PATH = './session.json';
 const express = require('express');
 const app = express();
+const qrcodeImg = require('qrcode');
 let sessionData;
 if (fs.existsSync(SESSION_FILE_PATH)) {
     sessionData = require(SESSION_FILE_PATH);
