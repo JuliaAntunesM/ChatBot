@@ -3,6 +3,8 @@ const qrcode = require('qrcode-terminal');
 const { Client, MessageMedia } = require('whatsapp-web.js');
 const fs = require('fs');
 const SESSION_FILE_PATH = './session.json';
+const express = require('express');
+const app = express();
 let sessionData;
 if (fs.existsSync(SESSION_FILE_PATH)) {
     sessionData = require(SESSION_FILE_PATH);
@@ -10,9 +12,37 @@ if (fs.existsSync(SESSION_FILE_PATH)) {
 const client = new Client({
     session: sessionData
 });
+let latestQr = null;
+
+app.get('/', (req, res) => {
+    if (latestQr) {
+        res.send(`
+            <html>
+                <body style='display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;'>
+                    <h2>Escaneie o QR Code para conectar o WhatsApp</h2>
+                    <img src="${latestQr}" />
+                </body>
+            </html>
+        `);
+    } else {
+        res.send('<html><body><h2>QR Code ainda não gerado. Aguarde...</h2></body></html>');
+    }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Servidor Express rodando na porta ${PORT}`);
+});
+
 // serviço de leitura do qr code
 client.on('qr', qr => {
     qrcode.generate(qr, {small: true});
+    qrcodeImg.toDataURL(qr, (err, url) => {
+        if (!err) {
+            latestQr = url;
+            console.log('QR Code atualizado para exibição web!');
+        }
+    });
     console.log('QR Code gerado! Veja o terminal/log da Railway para escanear.');
 });
 // apos isso ele diz que foi tudo certo
