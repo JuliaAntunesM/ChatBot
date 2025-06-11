@@ -1,0 +1,210 @@
+Roteiro mensagens:
+ 
+ChatBot: Oi! Tudo bem? Eu sou a professora Natália.🥰 
+
+[Aguarde 3 segundos]
+
+ChatBotPergunta:Antes de tudo! Qual é o seu nome?
+
+[Aguarde resposta da cliente]
+
+ChatBot: Que bom falar contigo, [NOME DA CLIENTE]! 
+ 
+[Aguarde 5 segundos]
+ 
+ChatBot: Me conta, qual é seu objetivo com os treinos? Quer secar, definir ou levantar o bumbum? Assim posso te ajudar da melhor forma! 🩷🥰Estou aqui 
+pra te ouvir!💗😊
+
+[Aguarde resposta da cliente]
+ 
+ChatBot: Entendi, [NOME DA CLIENTE]! 
+ 
+[Aguarde 6 segundos]
+ 
+ChatBot: É normal querer mudanças, e eu estou aqui pra te ajudar a alcançá-las!😍🎉
+ 
+[Aguarde 7 segundos]
+ 
+ChatBot: Vou te mandar um áudio rapidinho pra explicar melhor, tá?
+
+[Aguarde 7 segundos]
+ 
+ChatBot: [AUDIO1 - "Com o programa Corpo dos Sonhos, você pode eliminar celulite e flacidez de 
+forma simples e eficaz, tudo no conforto da sua casa."]
+ 
+[Aguarde 11 segundos]
+ 
+ChatBot: [AUDIO2 - "Você gostaria de saber como isso é possível? "]
+ 
+[Aguarde resposta da cliente]
+ 
+ChatBot: Fico muito feliz que tenha se interessado e queira saber mais [NOME DA CLIENTE]!🥰💗
+ 
+[Aguarde 8 segundos]
+ 
+ChatBot: Os os treinos em casa da professora Natália Fit é um método que promete resultados visíveis em apenas 30 dias!😱😍
+ 
+[Aguarde 10 segundos]
+ 
+ChatBot: Imagine-se com um corpo mais firme e tonificado, sem precisar de equipamentos caros 
+ou academias lotadas...🥰💗
+ 
+[Aguarde 9 segundos]
+ 
+ChatBotPergunta: Você já ouviu falar dos nossos treinos em casa? 
+ 
+[Aguarde resposta da cliente]
+
+ChatBot: Eles são a solução perfeita para quem deseja transformar o corpo rapidamente!😍🎉 
+ 
+[Aguarde 7 segundos]
+ 
+ChatBot: E se você não notar resultados, garantimos seu dinheiro de volta!😍💰
+ 
+ [Aguarde 7 segundos]
+
+ChatBot: O que torna nossos treinos tão eficaz são as aulas Exclusivas de Treinos Guiados.
+ 
+[Aguarde 8 segundos]
+ 
+ChatBot: Com aulas práticas e acessíveis, adaptadas aos seus objetivos, você fará treinos que 
+realmente funcionam!😱😍🎉
+ 
+[Aguarde 10 segundos]
+ 
+ChatBot: E tudo isso sob a orientação da Professora Natália Fit, especialista em transformação 
+corporal.💗
+ 
+[Aguarde 5 segundos]
+ 
+ChatBot: Quer saber como funciona esse método? 
+
+[Aguarde resposta da cliente] 
+ 
+ChatBot: 🎁Com os nossos treinos em casa, você pode esperar:
+ 
+😍Eliminação de Celulite: Aulas focadas para combater a celulite.  
+🍑Flacidez Reduzida: Treinos que tonificam seu corpo.  
+🥦🍎Dicas de Nutrição: Estratégias para maximizar resultados.  
+🥰Apoio Comunitário: Conexão com outras mulheres em busca de transformação.  
+🏆Monitoramento de Progresso: Ferramentas para acompanhar suas melhorias.  
+ 
+[Aguarde 12 segundos]
+ 
+ChatBot: E tudo isso em apenas 30 dias!😍🎉 
+ 
+[Aguarde 7 segundos]
+ 
+ChatBot: Posso te mostrar alguns depoimentos de mulheres que já usaram o método? 
+ 
+[Aguarde 7 segundos]
+ 
+ChatBot: Olha o que as mulheres estão falando sobre as aulas da Natália Fit:
+ 
+[Aguarde 8 segundos]
+
+PROVASOCIAL1
+ 
+[Aguarde 10 segundos]
+ 
+ChatBot: Outro depoimento:
+ 
+PROVASOCIAL2
+ 
+[Aguarde 9 segundos]
+ 
+ChatBot: E mais um:
+ 
+PROVASOCIAL3
+ 
+[Aguarde 9 segundos]
+
+ChatBot: Olha só este relato:
+ 
+PROVASOCIAL4
+ 
+[Aguarde 9 segundos]
+ 
+ChatBot: Está pronta para transformar seu corpo também, [NOME DA CLIENTE]?😍🎉
+ 
+[Aguarde resposta da cliente]
+
+ChatBot: Agora, você deve estar se perguntando quanto custa essa transformação...
+ 
+[Aguarde 8 segundos]
+ 
+ChatBot: O programa de Treinos da Natália Fit poderia facilmente ser vendido por R$ 997!
+ 
+[Aguarde 10 segundos]
+ 
+ChatBot: Mas hoje, você pode começar sua transformação por apenas R$47!😱😍
+ 
+[Aguarde 9 segundos]
+ 
+ChatBot: E tem mais, fechando hoje, você ainda leva bônus exclusivos:🎁
+
+🍑Aulas "Segredos para um Bumbum Perfeito" 
+🥗Guia de Bem-Estar Permanente 
+🏆Acesso ao Grupo VIP no WhatsApp  
+ 
+[Aguarde 12 segundos]
+ 
+ChatBot: E você tem 7 dias de garantia incondicional. Se não gostar, devolvemos seu dinheiro!💰🎁 
+ 
+[Aguarde 7 segundos]
+ 
+ChatBot: Mas atenção, essa oferta é válida somente para os 50 primeiros inscritos!😱
+ 
+[Aguarde 8 segundos]
+ 
+ChatBot: O que você acha, [NOME DA CLIENTE]? 
+ 
+[Aguarde resposta da cliente]
+
+ChatBot: Eu entendo que decidir pode ser difícil...
+ 
+[Aguarde 7 segundos]
+ 
+ChatBot: Mas continuar como está pode ser ainda mais desgastante, não acha?😫 
+ 
+[Aguarde 7 segundos]
+ 
+ChatBot: Ao escolher as aulas da Natália Fit, você evita:
+ 
+😫Perder tempo com soluções que não funcionam.  
+💰Gastar mais dinheiro em tratamentos caros.  
+🍑Deixar problemas de flacidez e celulite piorarem.  
+😰Frustração de não ver resultados. 
+ 
+[Aguarde 13 segundos]
+ 
+ChatBot: Você está pronta para aproveitar essa oferta de R$47 e transformar seu corpo?😍🎉 
+ 
+[Aguarde 15 segundos]
+
+ChatBot: [NOME DA CLIENTE], essa é a sua oportunidade incrível!!!🥰💗🎉
+ 
+[Aguarde 8 segundos]
+ 
+ChatBot: Clique no link e garanta seu acesso por apenas R$47.🎁
+ 
+[Aguarde 7 segundos]
+ 
+ChatBot: Vai ser incrível ter você com a gente!🥰💗 
+ 
+[Aguarde 7 segundos]
+ 
+ChatBot: Se tiver qualquer dúvida ou precisar de algo, me avisa. 
+ 
+[Aguarde 7 segundos]
+ 
+ChatBot: E eu tenho uma surpresa pra você, [NOME DA CLIENTE]🎁
+ 
+[Aguarde 8 segundos]
+ 
+ChatBot: Assim que finalizar o pagamento, vou liberar um bônus extra que foi autorizado para você 
+por ter ficado comigo até agora...🎁😍😍
+ 
+[Aguarde 4 segundos]
+ 
+ChatBot: https://lastlink.com/p/CFBBEB673/checkout-payment/
