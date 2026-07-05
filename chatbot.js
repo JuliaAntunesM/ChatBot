@@ -55,7 +55,12 @@ const client = new Client({
             '--disable-default-apps',
             '--disable-sync',
             '--metrics-recording-only',
-            '--mute-audio'
+            '--mute-audio',
+            '--memory-pressure-off',
+            '--js-flags=--max-old-space-size=256',
+            '--disable-web-security',
+            '--disable-notifications',
+            '--disable-logging'
         ]
     }
 });
@@ -73,10 +78,14 @@ client.on('ready', () => {
     console.log('Tudo certo! WhatsApp conectado.');
 });
 
-client.on('disconnected', () => {
+client.on('disconnected', (reason) => {
     botStatus = 'disconnected';
     currentQR = null;
-    console.log('WhatsApp desconectado.');
+    console.log(`WhatsApp desconectado. Motivo: ${reason}`);
+    setTimeout(() => {
+        console.log('Tentando reconectar...');
+        client.initialize();
+    }, 5000);
 });
 
 client.initialize();
