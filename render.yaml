@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: chatbot-nataliafit
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: PUPPETEER_EXECUTABLE_PATH
+        value: /usr/bin/chromium
+      - key: PUPPETEER_SKIP_CHROMIUM_DOWNLOAD
+        value: "true"
+    disk:
+      name: chatbot-data
+      mountPath: /app/data
+      sizeGB: 1
