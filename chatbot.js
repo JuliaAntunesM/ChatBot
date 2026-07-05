@@ -85,6 +85,10 @@ async function sendNode(userId, node, vars) {
 
         if (msg.type === 'text') {
             await client.sendMessage(userId, applyVars(msg.content, vars));
+        } else if (msg.type === 'opcoes') {
+            const linhas = (msg.opcoes || []).map((o, i) => `${i + 1}️⃣ ${o}`).join('\n');
+            const texto = (msg.content ? applyVars(msg.content, vars) + '\n\n' : '') + linhas + '\n\n👉 Responda com o número da opção!';
+            await client.sendMessage(userId, texto);
         } else if (msg.type === 'audio') {
             const media = await MessageMedia.fromFilePath(msg.content);
             await client.sendMessage(userId, media, { sendAudioAsVoice: true });

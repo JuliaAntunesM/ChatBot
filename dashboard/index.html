@@ -464,11 +464,14 @@ function renderMsgTab(node){
 
 function renderMsgItem(m, i){
   const isFile = m.type==='audio'||m.type==='image';
+  const isOpcoes = m.type==='opcoes';
+  const opts = m.opcoes || [];
   return `
   <div class="msg-item" id="msg-item-${i}">
     <div class="msg-row">
       <select onchange="updateMsgType(${i},this.value)">
         <option value="text" ${m.type==='text'?'selected':''}>💬 Texto</option>
+        <option value="opcoes" ${m.type==='opcoes'?'selected':''}>🔢 Lista de opções</option>
         <option value="audio" ${m.type==='audio'?'selected':''}>🎵 Áudio</option>
         <option value="image" ${m.type==='image'?'selected':''}>🖼️ Imagem</option>
       </select>
@@ -480,6 +483,20 @@ function renderMsgItem(m, i){
            📂 Trocar arquivo
            <input type="file" style="display:none" accept="${m.type==='audio'?'audio/*':'image/*'}" onchange="uploadFile(event,${i})"/>
          </label>`
+      : isOpcoes
+      ? `<div style="font-size:.72rem;color:var(--muted);margin-bottom:5px">Texto da pergunta:</div>
+         <textarea oninput="updateMsgContent(${i},this.value)" style="margin-bottom:8px">${esc(m.content||'')}</textarea>
+         <div style="font-size:.72rem;color:var(--muted);margin-bottom:6px">Opções (cliente responde com o número):</div>
+         ${opts.map((o,oi)=>`
+           <div style="display:flex;gap:6px;margin-bottom:5px;align-items:center">
+             <span style="font-size:.75rem;color:var(--accent);font-weight:700;width:18px">${oi+1}.</span>
+             <input type="text" value="${esc(o)}" oninput="updateOpcao(${i},${oi},this.value)" placeholder="Opção ${oi+1}" style="flex:1"/>
+             <button class="btn btn-danger btn-xs" onclick="removeOpcao(${i},${oi})">✕</button>
+           </div>`).join('')}
+         <button class="add-msg" style="margin-bottom:6px" onclick="addOpcao(${i})">＋ Adicionar opção</button>
+         <div style="font-size:.67rem;color:var(--muted);background:var(--bg);border-radius:6px;padding:7px">
+           💡 Na aba <strong>Conexões</strong>, use <strong>1</strong>, <strong>2</strong>, <strong>3</strong>... como condição para direcionar cada opção a um bloco diferente.
+         </div>`
       : `<textarea oninput="updateMsgContent(${i},this.value)">${esc(m.content||'')}</textarea>
          <div style="font-size:.68rem;color:var(--muted);margin-top:3px">Use {nome}, {objetivo} para variáveis salvas</div>`
     }
@@ -531,7 +548,10 @@ function setStart(id){ config.startNodeId=id; renderCanvas(); selectNode(id); }
 function addMsg(){ const n=getSelectedNode(); if(!n)return; if(!n.messages)n.messages=[]; n.messages.push({type:'text',content:'',delay:2000}); renderMsgTab(n); }
 function removeMsg(i){ const n=getSelectedNode(); if(!n)return; n.messages.splice(i,1); renderMsgTab(n); refreshNodeEl(n); }
 function moveMsg(i,d){ const n=getSelectedNode(); if(!n)return; const m=n.messages; const t=m[i]; m[i]=m[i+d]; m[i+d]=t; renderMsgTab(n); }
-function updateMsgType(i,v){ const n=getSelectedNode(); if(!n)return; n.messages[i].type=v; if(v!=='text'&&!n.messages[i].content.startsWith('./')){ n.messages[i].content=v==='audio'?'./audios/':'./ProvaSocial/'; } renderMsgTab(n); }
+function updateMsgType(i,v){ const n=getSelectedNode(); if(!n)return; n.messages[i].type=v; if(v==='audio'||v==='image'){ if(!n.messages[i].content.startsWith('./')){ n.messages[i].content=v==='audio'?'./audios/':'./ProvaSocial/'; } } if(v==='opcoes'){ n.messages[i].opcoes=n.messages[i].opcoes||['','','']; } renderMsgTab(n); }
+function updateOpcao(mi,oi,v){ const n=getSelectedNode(); if(!n)return; n.messages[mi].opcoes[oi]=v; }
+function addOpcao(mi){ const n=getSelectedNode(); if(!n)return; if(!n.messages[mi].opcoes)n.messages[mi].opcoes=[]; n.messages[mi].opcoes.push(''); renderMsgTab(n); }
+function removeOpcao(mi,oi){ const n=getSelectedNode(); if(!n)return; n.messages[mi].opcoes.splice(oi,1); renderMsgTab(n); }
 function updateMsgDelay(i,v){ const n=getSelectedNode(); if(!n)return; n.messages[i].delay=parseInt(v)||0; }
 function updateMsgContent(i,v){ const n=getSelectedNode(); if(!n)return; n.messages[i].content=v; refreshNodeEl(n); }
 
