@@ -1,169 +1,170 @@
-// leitor de qr code
+// ─── Dependências ────────────────────────────────────────────────────────────
 const qrcode = require('qrcode-terminal');
-const { Client, MessageMedia } = require('whatsapp-web.js');
-const client = new Client();
-// serviço de leitura do qr code
-client.on('qr', qr => {
-    qrcode.generate(qr, {small: true});
+const qrcodeLib = require('qrcode');
+const { Client, MessageMedia, LocalAuth } = require('whatsapp-web.js');
+const express = require('express');
+const multer = require('multer');
+const fs = require('fs');
+const path = require('path');
+
+// ─── Configuração ─────────────────────────────────────────────────────────────
+const CONFIG_PATH = path.join(__dirname, 'config.json');
+
+function loadConfig() {
+    return JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
+}
+
+function saveConfig(data) {
+    fs.writeFileSync(CONFIG_PATH, JSON.stringify(data, null, 2), 'utf8');
+}
+
+// ─── Estado global ────────────────────────────────────────────────────────────
+let botStatus = 'disconnected'; // 'disconnected' | 'qr' | 'ready'
+let currentQR = null;
+
+// ─── WhatsApp Client ──────────────────────────────────────────────────────────
+const client = new Client({
+    authStrategy: new LocalAuth(),
+    puppeteer: {
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
+        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
+    }
 });
-// apos isso ele diz que foi tudo certo
+
+client.on('qr', async qr => {
+    qrcode.generate(qr, { small: true });
+    botStatus = 'qr';
+    currentQR = await qrcodeLib.toDataURL(qr);
+    console.log('QR Code gerado. Escaneie pelo WhatsApp.');
+});
+
 client.on('ready', () => {
+    botStatus = 'ready';
+    currentQR = null;
     console.log('Tudo certo! WhatsApp conectado.');
 });
-// E inicializa tudo 
+
+client.on('disconnected', () => {
+    botStatus = 'disconnected';
+    currentQR = null;
+    console.log('WhatsApp desconectado.');
+});
+
 client.initialize();
 
-const delay = ms => new Promise(res => setTimeout(res, ms)); // Função que usamos para criar o delay entre uma ação e outra
+// ─── Delay ───────────────────────────────────────────────────────────────────
+const delay = ms => new Promise(res => setTimeout(res, ms));
 
-// Armazenar o estado da conversa por usuário
+// ─── Substituir variáveis no texto ───────────────────────────────────────────
+function applyVars(text, state) {
+    return text.replace(/\{nome\}/g, state.nome || '');
+}
+
+// ─── Enviar sequência de mensagens de um step ────────────────────────────────
+async function sendStep(userId, stepIndex, state) {
+    const config = loadConfig();
+    const step = config.steps[stepIndex];
+    if (!step) return;
+
+    for (const msg of step.messages) {
+        if (msg.delay > 0) await delay(msg.delay);
+
+        if (msg.type === 'text') {
+            await client.sendMessage(userId, applyVars(msg.content, state));
+        } else if (msg.type === 'audio') {
+            const media = await MessageMedia.fromFilePath(msg.content);
+            await client.sendMessage(userId, media, { sendAudioAsVoice: true });
+        } else if (msg.type === 'image') {
+            const media = await MessageMedia.fromFilePath(msg.content);
+            await client.sendMessage(userId, media);
+        }
+    }
+}
+
+// ─── Estado por usuário ───────────────────────────────────────────────────────
 const userStates = {};
 
 client.on('message', async msg => {
-    // Ignorar mensagens de grupos
     if (!msg.from.endsWith('@c.us')) return;
 
-    const chat = await msg.getChat();
     const userId = msg.from;
     if (!userStates[userId]) userStates[userId] = { step: 0 };
     const state = userStates[userId];
+    const config = loadConfig();
 
-    // Início do funil
-    if (state.step === 0 && /(oi|olá|ola|bom dia|boa tarde|boa noite)/i.test(msg.body)) {
+    // Gatilho inicial
+    if (state.step === 0) {
+        const pattern = new RegExp(config.triggerWords.join('|'), 'i');
+        if (!pattern.test(msg.body)) return;
         state.step = 1;
-        await client.sendMessage(userId, 'Oi! Tudo bem? Eu sou a professora Natália.🥰');
-        await delay(3000);
-        await client.sendMessage(userId, 'Antes de tudo! Qual é o seu nome?');
+        await sendStep(userId, 0, state); // step id=1 → índice 0
         state.step = 2;
         return;
     }
 
-    // Recebe o nome da cliente
+    // Step 2: recebe o nome
     if (state.step === 2) {
         state.nome = msg.body.split(' ')[0];
-        await client.sendMessage(userId, `Que bom falar contigo, ${state.nome}!`);
-        await delay(5000);
-        await client.sendMessage(userId, 'Me conta, qual é seu objetivo com os treinos? Quer secar, definir ou levantar o bumbum? Assim posso te ajudar da melhor forma! 🩷🥰Estou aqui pra te ouvir!💗😊');
+        await sendStep(userId, 1, state);
         state.step = 3;
         return;
     }
 
-    // Recebe objetivo
-    if (state.step === 3) {
-        // Aguarda resposta
-        await client.sendMessage(userId, `Entendi, ${state.nome}!`);
-        await delay(6000);
-        await client.sendMessage(userId, 'É normal querer mudanças, e eu estou aqui pra te ajudar a alcançá-las!😍🎉');
-        await delay(7000);
-        await client.sendMessage(userId, 'Vou te mandar um áudio rapidinho pra explicar melhor, tá?');
-        await delay(7000);
-        const audio1 = await MessageMedia.fromFilePath('./audios/AUDIO1.mp3');
-        await client.sendMessage(userId, audio1, { sendAudioAsVoice: true });
-        await delay(11000);
-        const audio2 = await MessageMedia.fromFilePath('./audios/AUDIO2.mp3');
-        await client.sendMessage(userId, audio2, { sendAudioAsVoice: true });
-        // Aguarda resposta
-        await client.sendMessage(userId, `Fico muito feliz que tenha se interessado e queira saber mais ${state.nome}!🥰💗`);
-        await delay(8000);
-        await client.sendMessage(userId, 'Os os treinos em casa da professora Natália Fit é um método que promete resultados visíveis em apenas 30 dias!😱😍');
-        await delay(10000);
-        await client.sendMessage(userId, 'Imagine-se com um corpo mais firme e tonificado, sem precisar de equipamentos caros ou academias lotadas...🥰💗');
-        await delay(9000);
-        await client.sendMessage(userId, 'Você já ouviu falar dos nossos treinos em casa?');
-        state.step = 4;
+    // Steps 3 a 7: avança automaticamente enviando o próximo step
+    if (state.step >= 3 && state.step <= 7) {
+        const stepIndex = state.step - 1; // step 3 → índice 2, etc.
+        await sendStep(userId, stepIndex, state);
+        state.step = state.step < 7 ? state.step + 1 : 7;
         return;
     }
+});
 
-    // Pergunta se já ouviu falar dos treinos
-    if (state.step === 4) {
-        // Aguarda resposta
-        await client.sendMessage(userId, 'Eles são a solução perfeita para quem deseja transformar o corpo rapidamente!😍🎉');
-        await delay(7000);
-        await client.sendMessage(userId, 'E se você não notar resultados, garantimos seu dinheiro de volta!😍💰');
-        await delay(7000);
-        await client.sendMessage(userId, 'O que torna nossos treinos tão eficaz são as aulas Exclusivas de Treinos Guiados.');
-        await delay(8000);
-        await client.sendMessage(userId, 'Com aulas práticas e acessíveis, adaptadas aos seus objetivos, você fará treinos que realmente funcionam!😱😍🎉');
-        await delay(10000);
-        await client.sendMessage(userId, 'E tudo isso sob a orientação da Professora Natália Fit, especialista em transformação corporal.💗');
-        await delay(5000);
-        await client.sendMessage(userId, 'Quer saber como funciona esse método?');
-        state.step = 5;
-        return;
-    }
+// ─── Servidor Express (Dashboard) ────────────────────────────────────────────
+const app = express();
+app.use(express.json());
+app.use(express.static(path.join(__dirname, 'dashboard')));
 
-    // Aguarda resposta se quer saber como funciona
-    if (state.step === 5) {
-        await client.sendMessage(userId, '🎁Com os nossos treinos em casa, você pode esperar:\n\n😍Eliminação de Celulite: Aulas focadas para combater a celulite.  \n🍑Flacidez Reduzida: Treinos que tonificam seu corpo.  \n🥦🍎Dicas de Nutrição: Estratégias para maximizar resultados.  \n🥰Apoio Comunitário: Conexão com outras mulheres em busca de transformação.  \n🏆Monitoramento de Progresso: Ferramentas para acompanhar suas melhorias.');
-        await delay(12000);
-        await client.sendMessage(userId, 'E tudo isso em apenas 30 dias!😍🎉');
-        await delay(7000);
-        await client.sendMessage(userId, 'Posso te mostrar alguns depoimentos de mulheres que já usaram o método?');
-        await delay(7000);
-        await client.sendMessage(userId, 'Olha o que as mulheres estão falando sobre as aulas da Natália Fit:');
-        await delay(8000);
-        const prova1 = await MessageMedia.fromFilePath('./ProvaSocial/PROVASOCIAL1.png');
-        await client.sendMessage(userId, prova1);
-        await delay(10000);
-        await client.sendMessage(userId, 'Outro depoimento:');
-        const prova2 = await MessageMedia.fromFilePath('./ProvaSocial/PROVASOCIAL2.png');
-        await client.sendMessage(userId, prova2);
-        await delay(9000);
-        await client.sendMessage(userId, 'E mais um:');
-        const prova3 = await MessageMedia.fromFilePath('./ProvaSocial/PROVASOCIAL3.png');
-        await client.sendMessage(userId, prova3);
-        await delay(9000);
-        await client.sendMessage(userId, 'Olha só este relato:');
-        const prova4 = await MessageMedia.fromFilePath('./ProvaSocial/PROVASOCIAL4.png');
-        await client.sendMessage(userId, prova4);
-        await delay(9000);
-        await client.sendMessage(userId, `Está pronta para transformar seu corpo também, ${state.nome}?😍🎉`);
-        // Aguarda resposta
-        await client.sendMessage(userId, 'Agora, você deve estar se perguntando quanto custa essa transformação...');
-        await delay(8000);
-        await client.sendMessage(userId, 'O programa de Treinos da Natália Fit poderia facilmente ser vendido por R$ 997!');
-        await delay(10000);
-        await client.sendMessage(userId, 'Mas hoje, você pode começar sua transformação por apenas R$47!😱😍');
-        await delay(9000);
-        await client.sendMessage(userId, 'E tem mais, fechando hoje, você ainda leva bônus exclusivos:🎁\n\n🍑Aulas "Segredos para um Bumbum Perfeito" \n🥗Guia de Bem-Estar Permanente \n🏆Acesso ao Grupo VIP no WhatsApp');
-        await delay(12000);
-        await client.sendMessage(userId, 'E você tem 7 dias de garantia incondicional. Se não gostar, devolvemos seu dinheiro!💰🎁');
-        await delay(7000);
-        await client.sendMessage(userId, 'Mas atenção, essa oferta é válida somente para os 50 primeiros inscritos!😱');
-        await delay(8000);
-        await client.sendMessage(userId, `O que você acha, ${state.nome}?`);
-        state.step = 6;
-        return;
-    }
+// Upload de arquivos
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const type = req.body.type;
+        const dest = type === 'audio'
+            ? path.join(__dirname, 'audios')
+            : path.join(__dirname, 'ProvaSocial');
+        fs.mkdirSync(dest, { recursive: true });
+        cb(null, dest);
+    },
+    filename: (req, file, cb) => cb(null, file.originalname)
+});
+const upload = multer({ storage });
 
-    // Aguarda resposta final
-    if (state.step === 6) {
-        await client.sendMessage(userId, 'Eu entendo que decidir pode ser difícil...');
-        await delay(7000);
-        await client.sendMessage(userId, 'Mas continuar como está pode ser ainda mais desgastante, não acha?😫');
-        await delay(7000);
-        await client.sendMessage(userId, 'Ao escolher as aulas da Natália Fit, você evita:\n\n😫Perder tempo com soluções que não funcionam.  \n💰Gastar mais dinheiro em tratamentos caros.  \n🍑Deixar problemas de flacidez e celulite piorarem.  \n😰Frustração de não ver resultados.');
-        await delay(13000);
-        await client.sendMessage(userId, 'Você está pronta para aproveitar essa oferta de R$47 e transformar seu corpo?😍🎉');
-        await delay(15000);
-        await client.sendMessage(userId, `${state.nome}, essa é a sua oportunidade incrível!!!🥰💗🎉`);
-        await delay(8000);
-        await client.sendMessage(userId, 'Clique no link e garanta seu acesso por apenas R$47.🎁');
-        await delay(7000);
-        await client.sendMessage(userId, 'Vai ser incrível ter você com a gente!🥰💗');
-        await delay(7000);
-        await client.sendMessage(userId, 'Se tiver qualquer dúvida ou precisar de algo, me avisa.');
-        await delay(7000);
-        await client.sendMessage(userId, `E eu tenho uma surpresa pra você, ${state.nome}🎁`);
-        await delay(8000);
-        await client.sendMessage(userId, 'Assim que finalizar o pagamento, vou liberar um bônus extra que foi autorizado para você por ter ficado comigo até agora...🎁😍😍');
-        await delay(4000);
-        await client.sendMessage(userId, 'https://lastlink.com/p/CFBBEB673/checkout-payment/');
-        state.step = 7;
-        return;
-    }
+// API: ler config
+app.get('/api/config', (req, res) => {
+    res.json(loadConfig());
+});
 
-    if (state.step === 7) {
-        await client.sendMessage(userId, 'Se precisar de mais informações, é só me chamar!');
-        return;
+// API: salvar config
+app.post('/api/config', (req, res) => {
+    try {
+        saveConfig(req.body);
+        res.json({ ok: true });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
     }
+});
+
+// API: status do bot + QR
+app.get('/api/status', (req, res) => {
+    res.json({ status: botStatus, qr: currentQR });
+});
+
+// API: upload de arquivo
+app.post('/api/upload', upload.single('file'), (req, res) => {
+    const type = req.body.type;
+    const folder = type === 'audio' ? 'audios' : 'ProvaSocial';
+    res.json({ path: `./${folder}/${req.file.originalname}` });
+});
+
+app.listen(3000, () => {
+    console.log('📊 Dashboard disponível em: http://localhost:3000');
 });

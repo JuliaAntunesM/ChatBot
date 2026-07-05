@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ChatBot Dashboard</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --border: #2e3347;
+      --accent: #7c3aed;
+      --accent2: #a855f7;
+      --green: #22c55e;
+      --red: #ef4444;
+      --yellow: #eab308;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --radius: 12px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; min-height: 100vh; }
+
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+    }
+    header h1 { font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+    header h1 span { font-size: 1.5rem; }
+
+    .status-badge {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 14px; border-radius: 20px;
+      font-size: 0.85rem; font-weight: 600;
+      background: var(--surface2); border: 1px solid var(--border);
+    }
+    .dot { width: 9px; height: 9px; border-radius: 50%; }
+    .dot.green { background: var(--green); box-shadow: 0 0 8px var(--green); }
+    .dot.red { background: var(--red); }
+    .dot.yellow { background: var(--yellow); animation: pulse 1s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+    .layout { display: flex; min-height: calc(100vh - 65px); }
+
+    .sidebar {
+      width: 260px; flex-shrink: 0;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 20px 0;
+    }
+    .sidebar-title { font-size: 0.7rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; padding: 0 20px 10px; }
+    .step-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 20px; cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: all 0.15s;
+    }
+    .step-item:hover { background: var(--surface2); }
+    .step-item.active { background: var(--surface2); border-left-color: var(--accent); }
+    .step-num {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--surface2); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem; font-weight: 700; color: var(--muted); flex-shrink: 0;
+    }
+    .step-item.active .step-num { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .step-label { font-size: 0.875rem; font-weight: 500; }
+    .step-count { margin-left: auto; font-size: 0.75rem; color: var(--muted); }
+
+    .main { flex: 1; padding: 28px 32px; overflow-y: auto; }
+
+    .tabs { display: flex; gap: 4px; margin-bottom: 24px; background: var(--surface); border-radius: var(--radius); padding: 4px; width: fit-content; border: 1px solid var(--border); }
+    .tab { padding: 8px 18px; border-radius: 8px; cursor: pointer; font-size: 0.875rem; font-weight: 500; color: var(--muted); transition: all 0.15s; border: none; background: none; }
+    .tab.active { background: var(--accent); color: #fff; }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
+    .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .card-title { font-size: 0.95rem; font-weight: 600; }
+
+    .step-editor { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .step-editor-header { background: var(--surface2); padding: 16px 20px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); }
+    .step-editor-title { font-weight: 700; font-size: 1rem; }
+    .step-editor-body { padding: 20px; }
+
+    .message-block {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 16px; margin-bottom: 12px; position: relative;
+    }
+    .message-block-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .type-badge {
+      font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+      padding: 3px 8px; border-radius: 6px;
+    }
+    .type-badge.text { background: #1e3a5f; color: #60a5fa; }
+    .type-badge.audio { background: #1a3a2a; color: #4ade80; }
+    .type-badge.image { background: #3a1a3a; color: #e879f9; }
+
+    .delay-badge {
+      margin-left: auto; font-size: 0.75rem; color: var(--muted);
+      display: flex; align-items: center; gap: 4px;
+    }
+
+    textarea {
+      width: 100%; background: var(--bg); border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px 12px; color: var(--text);
+      font-size: 0.875rem; resize: vertical; min-height: 72px; font-family: inherit;
+      transition: border-color 0.15s;
+    }
+    textarea:focus { outline: none; border-color: var(--accent); }
+
+    input[type=text], input[type=number] {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 8px; padding: 8px 12px; color: var(--text);
+      font-size: 0.875rem; width: 100%; font-family: inherit;
+      transition: border-color 0.15s;
+    }
+    input:focus { outline: none; border-color: var(--accent); }
+
+    .field-group { margin-bottom: 12px; }
+    .field-label { font-size: 0.75rem; color: var(--muted); margin-bottom: 6px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .btn {
+      padding: 9px 18px; border-radius: 8px; border: none; cursor: pointer;
+      font-size: 0.875rem; font-weight: 600; transition: all 0.15s;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent2); }
+    .btn-danger { background: transparent; color: var(--red); border: 1px solid var(--red); }
+    .btn-danger:hover { background: var(--red); color: #fff; }
+    .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+    .btn-ghost:hover { background: var(--surface2); color: var(--text); }
+    .btn-sm { padding: 5px 12px; font-size: 0.8rem; }
+    .btn-green { background: var(--green); color: #000; }
+    .btn-green:hover { opacity: 0.85; }
+
+    .actions-bar { display: flex; gap: 10px; margin-top: 20px; }
+
+    .msg-actions { position: absolute; top: 12px; right: 12px; display: flex; gap: 6px; }
+
+    .add-msg-btn {
+      width: 100%; padding: 10px; border-radius: 8px; border: 1px dashed var(--border);
+      background: transparent; color: var(--muted); cursor: pointer; font-size: 0.875rem;
+      transition: all 0.15s; margin-top: 4px;
+    }
+    .add-msg-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--surface2); }
+
+    .file-upload {
+      border: 1px dashed var(--border); border-radius: 8px; padding: 16px;
+      text-align: center; cursor: pointer; transition: all 0.15s;
+    }
+    .file-upload:hover { border-color: var(--accent); }
+    .file-upload input { display: none; }
+    .file-upload .file-name { font-size: 0.8rem; color: var(--muted); margin-top: 6px; }
+
+    /* QR Code panel */
+    .qr-wrapper {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 20px; padding: 40px;
+    }
+    #qr-img { border-radius: 12px; border: 4px solid var(--accent); max-width: 220px; }
+    #qr-placeholder { width: 220px; height: 220px; background: var(--surface2); border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 1px dashed var(--border); color: var(--muted); font-size: 0.875rem; text-align: center; }
+
+    /* Trigger words */
+    .tags { display: flex; flex-wrap: wrap; gap: 8px; }
+    .tag {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 20px; padding: 4px 12px; font-size: 0.8rem;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .tag button { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 1rem; line-height: 1; }
+    .tag-input-row { display: flex; gap: 8px; margin-top: 10px; }
+    .tag-input-row input { flex: 1; }
+
+    .toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: var(--green); color: #000; padding: 12px 20px;
+      border-radius: 10px; font-weight: 600; font-size: 0.875rem;
+      opacity: 0; transform: translateY(10px); transition: all 0.3s; pointer-events: none; z-index: 999;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.error { background: var(--red); color: #fff; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media(max-width:900px){ .grid-2 { grid-template-columns:1fr; } .sidebar { display:none; } }
+
+    select {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 8px; padding: 8px 12px; color: var(--text);
+      font-size: 0.875rem; cursor: pointer;
+    }
+    select:focus { outline: none; border-color: var(--accent); }
+
+    .connector { text-align: center; color: var(--muted); font-size: 1.2rem; margin: 4px 0; }
+
+    .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+    .stat-card .stat-val { font-size: 2rem; font-weight: 800; }
+    .stat-card .stat-label { font-size: 0.8rem; color: var(--muted); margin-top: 4px; }
+  </style>
+</head>
+<body>
+<header>
+  <h1><span>🤖</span> ChatBot Dashboard — Natália Fit</h1>
+  <div class="status-badge">
+    <div class="dot" id="status-dot" style="background:var(--red)"></div>
+    <span id="status-text">Desconectado</span>
+  </div>
+</header>
+
+<div class="layout">
+  <!-- Sidebar com steps -->
+  <aside class="sidebar">
+    <div class="sidebar-title">Fluxo de Conversa</div>
+    <div id="steps-sidebar"></div>
+  </aside>
+
+  <!-- Conteúdo principal -->
+  <main class="main">
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('flow')">📋 Fluxo</button>
+      <button class="tab" onclick="showTab('settings')">⚙️ Configurações</button>
+      <button class="tab" onclick="showTab('connection')">📱 Conexão</button>
+    </div>
+
+    <!-- Painel: Fluxo -->
+    <div class="panel active" id="panel-flow">
+      <div id="step-editor-area"></div>
+    </div>
+
+    <!-- Painel: Configurações -->
+    <div class="panel" id="panel-settings">
+      <div class="card">
+        <div class="card-header"><span class="card-title">🔑 Palavras-gatilho</span></div>
+        <p style="font-size:0.85rem;color:var(--muted);margin-bottom:14px;">O bot responde quando a primeira mensagem contiver uma dessas palavras:</p>
+        <div class="tags" id="trigger-tags"></div>
+        <div class="tag-input-row">
+          <input type="text" id="new-trigger" placeholder="Nova palavra..." />
+          <button class="btn btn-primary btn-sm" onclick="addTrigger()">Adicionar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Painel: Conexão / QR -->
+    <div class="panel" id="panel-connection">
+      <div class="card">
+        <div class="card-header"><span class="card-title">📱 Conexão com WhatsApp</span></div>
+        <div class="qr-wrapper">
+          <div id="qr-placeholder">
+            <div>
+              <div style="font-size:2.5rem;margin-bottom:8px">📲</div>
+              <div>Aguardando QR Code...</div>
+              <div style="margin-top:8px;font-size:0.75rem">Inicie o bot para gerar o QR</div>
+            </div>
+          </div>
+          <img id="qr-img" style="display:none" alt="QR Code" />
+          <div id="connection-msg" style="font-size:0.9rem;color:var(--muted);text-align:center"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions-bar">
+      <button class="btn btn-primary" onclick="saveConfig()">💾 Salvar Alterações</button>
+      <button class="btn btn-ghost" onclick="loadConfig()">🔄 Recarregar</button>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let config = { triggerWords: [], steps: [] };
+let activeStep = 0;
+
+async function loadConfig() {
+  const res = await fetch('/api/config');
+  config = await res.json();
+  renderSidebar();
+  renderStepEditor(activeStep);
+  renderTriggers();
+}
+
+async function saveConfig() {
+  const res = await fetch('/api/config', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(config)
+  });
+  if (res.ok) showToast('✅ Configurações salvas!');
+  else showToast('❌ Erro ao salvar!', true);
+}
+
+function renderSidebar() {
+  const el = document.getElementById('steps-sidebar');
+  el.innerHTML = config.steps.map((s, i) => `
+    <div class="step-item ${i === activeStep ? 'active' : ''}" onclick="selectStep(${i})">
+      <div class="step-num">${s.id}</div>
+      <div class="step-label">${s.label}</div>
+      <div class="step-count">${s.messages.length}</div>
+    </div>
+  `).join('');
+}
+
+function selectStep(i) {
+  activeStep = i;
+  renderSidebar();
+  renderStepEditor(i);
+}
+
+function renderStepEditor(i) {
+  const step = config.steps[i];
+  if (!step) return;
+  const area = document.getElementById('step-editor-area');
+  area.innerHTML = `
+    <div class="step-editor">
+      <div class="step-editor-header">
+        <div class="step-num" style="width:32px;height:32px;font-size:0.85rem;background:var(--accent);border-color:var(--accent);color:#fff">${step.id}</div>
+        <div>
+          <div class="step-editor-title">${step.label}</div>
+          <div style="font-size:0.75rem;color:var(--muted)">${step.messages.length} mensagem(ns)</div>
+        </div>
+        <div style="margin-left:auto;display:flex;gap:8px">
+          <input type="text" value="${step.label}" style="width:200px" onchange="step.label=this.value;renderSidebar()" placeholder="Nome do step" />
+        </div>
+      </div>
+      <div class="step-editor-body">
+        <div id="messages-list">
+          ${step.messages.map((m, mi) => renderMessageBlock(m, mi, i)).join('<div class="connector">↓</div>')}
+        </div>
+        <button class="add-msg-btn" onclick="addMessage(${i})">+ Adicionar mensagem</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderMessageBlock(m, mi, si) {
+  const typeColors = { text: 'text', audio: 'audio', image: 'image' };
+  const typeIcons = { text: '💬', audio: '🎵', image: '🖼️' };
+  const isFile = m.type === 'audio' || m.type === 'image';
+
+  return `
+    <div class="message-block" id="msg-${si}-${mi}">
+      <div class="msg-actions">
+        ${mi > 0 ? `<button class="btn btn-ghost btn-sm" onclick="moveMsg(${si},${mi},-1)" title="Mover para cima">↑</button>` : ''}
+        ${mi < config.steps[si].messages.length-1 ? `<button class="btn btn-ghost btn-sm" onclick="moveMsg(${si},${mi},1)" title="Mover para baixo">↓</button>` : ''}
+        <button class="btn btn-danger btn-sm" onclick="removeMsg(${si},${mi})">✕</button>
+      </div>
+      <div class="message-block-header">
+        <span class="type-badge ${typeColors[m.type]}">${typeIcons[m.type]} ${m.type}</span>
+        <select onchange="changeType(${si},${mi},this.value)">
+          <option value="text" ${m.type==='text'?'selected':''}>Texto</option>
+          <option value="audio" ${m.type==='audio'?'selected':''}>Áudio</option>
+          <option value="image" ${m.type==='image'?'selected':''}>Imagem</option>
+        </select>
+        <div class="delay-badge">⏱️ delay: 
+          <input type="number" value="${m.delay}" min="0" step="500" style="width:90px"
+            onchange="config.steps[${si}].messages[${mi}].delay=parseInt(this.value)||0" /> ms
+        </div>
+      </div>
+      ${isFile ? `
+        <div class="field-group">
+          <div class="field-label">Arquivo atual</div>
+          <div style="font-size:0.8rem;color:var(--muted);margin-bottom:8px">${m.content}</div>
+          <label class="file-upload">
+            <input type="file" accept="${m.type==='audio'?'audio/*':'image/*'}" onchange="uploadFile(event,${si},${mi})" />
+            <div>📂 Clique para substituir o arquivo</div>
+            <div class="file-name" id="fname-${si}-${mi}"></div>
+          </label>
+        </div>
+      ` : `
+        <div class="field-group">
+          <div class="field-label">Mensagem <span style="color:var(--muted);font-weight:400">(use {nome} para o nome do cliente)</span></div>
+          <textarea onchange="config.steps[${si}].messages[${mi}].content=this.value">${escHtml(m.content)}</textarea>
+        </div>
+      `}
+    </div>
+  `;
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function addMessage(si) {
+  config.steps[si].messages.push({ type: 'text', content: '', delay: 3000 });
+  renderStepEditor(si);
+}
+
+function removeMsg(si, mi) {
+  config.steps[si].messages.splice(mi, 1);
+  renderStepEditor(si);
+}
+
+function moveMsg(si, mi, dir) {
+  const msgs = config.steps[si].messages;
+  const tmp = msgs[mi]; msgs[mi] = msgs[mi+dir]; msgs[mi+dir] = tmp;
+  renderStepEditor(si);
+}
+
+function changeType(si, mi, type) {
+  config.steps[si].messages[mi].type = type;
+  if (type !== 'text' && !config.steps[si].messages[mi].content.startsWith('./')) {
+    config.steps[si].messages[mi].content = type === 'audio' ? './audios/' : './ProvaSocial/';
+  }
+  renderStepEditor(si);
+}
+
+async function uploadFile(event, si, mi) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const form = new FormData();
+  form.append('file', file);
+  form.append('type', config.steps[si].messages[mi].type);
+  const res = await fetch('/api/upload', { method: 'POST', body: form });
+  const data = await res.json();
+  if (data.path) {
+    config.steps[si].messages[mi].content = data.path;
+    document.getElementById(`fname-${si}-${mi}`).textContent = '✅ ' + file.name;
+    showToast('Arquivo enviado: ' + file.name);
+  }
+}
+
+function renderTriggers() {
+  const el = document.getElementById('trigger-tags');
+  el.innerHTML = config.triggerWords.map((w, i) => `
+    <div class="tag">${w}<button onclick="removeTrigger(${i})">×</button></div>
+  `).join('');
+}
+
+function addTrigger() {
+  const inp = document.getElementById('new-trigger');
+  const val = inp.value.trim().toLowerCase();
+  if (val && !config.triggerWords.includes(val)) {
+    config.triggerWords.push(val);
+    renderTriggers();
+    inp.value = '';
+  }
+}
+
+function removeTrigger(i) {
+  config.triggerWords.splice(i, 1);
+  renderTriggers();
+}
+
+function showTab(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+
+function showToast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isError ? ' error' : '');
+  setTimeout(() => t.className = 'toast', 3000);
+}
+
+// Polling de status e QR
+async function pollStatus() {
+  try {
+    const res = await fetch('/api/status');
+    const data = await res.json();
+    const dot = document.getElementById('status-dot');
+    const txt = document.getElementById('status-text');
+    const qrImg = document.getElementById('qr-img');
+    const qrPh = document.getElementById('qr-placeholder');
+    const msg = document.getElementById('connection-msg');
+
+    if (data.status === 'ready') {
+      dot.style.background = 'var(--green)'; dot.style.boxShadow = '0 0 8px var(--green)';
+      txt.textContent = 'Conectado';
+      qrImg.style.display = 'none'; qrPh.style.display = 'none';
+      msg.innerHTML = '✅ <strong>WhatsApp conectado!</strong><br>O bot está ativo e recebendo mensagens.';
+    } else if (data.status === 'qr') {
+      dot.style.background = 'var(--yellow)'; dot.style.boxShadow = '';
+      txt.textContent = 'Aguardando QR';
+      qrPh.style.display = 'none';
+      qrImg.src = data.qr;
+      qrImg.style.display = 'block';
+      msg.textContent = 'Escaneie o QR Code com seu WhatsApp';
+    } else {
+      dot.style.background = 'var(--red)'; dot.style.boxShadow = '';
+      txt.textContent = 'Desconectado';
+      qrImg.style.display = 'none'; qrPh.style.display = 'flex';
+      msg.textContent = 'Bot não está rodando ou aguardando inicialização.';
+    }
+  } catch {}
+}
+
+setInterval(pollStatus, 3000);
+pollStatus();
+loadConfig();
+</script>
+</body>
+</html>
