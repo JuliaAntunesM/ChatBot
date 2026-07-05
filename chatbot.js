@@ -8,7 +8,14 @@ const fs = require('fs');
 const path = require('path');
 
 // ─── Configuração ─────────────────────────────────────────────────────────────
-const CONFIG_PATH = path.join(__dirname, 'config.json');
+const DATA_DIR = process.env.RAILWAY_VOLUME_MOUNT_PATH || __dirname;
+const CONFIG_PATH = path.join(DATA_DIR, 'config.json');
+
+// Copia config.json padrão para o volume na primeira execução
+const DEFAULT_CONFIG_PATH = path.join(__dirname, 'config.json');
+if (!fs.existsSync(CONFIG_PATH) && CONFIG_PATH !== DEFAULT_CONFIG_PATH) {
+    fs.copyFileSync(DEFAULT_CONFIG_PATH, CONFIG_PATH);
+}
 
 function loadConfig() {
     return JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
@@ -24,7 +31,7 @@ let currentQR = null;
 
 // ─── WhatsApp Client ──────────────────────────────────────────────────────────
 const client = new Client({
-    authStrategy: new LocalAuth(),
+    authStrategy: new LocalAuth({ dataPath: DATA_DIR }),
     puppeteer: {
         executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
         headless: true,
