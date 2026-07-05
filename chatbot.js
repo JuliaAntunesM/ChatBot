@@ -8,13 +8,17 @@ const fs = require('fs');
 const path = require('path');
 
 // ─── Configuração ─────────────────────────────────────────────────────────────
-const DATA_DIR = process.env.RAILWAY_VOLUME_MOUNT_PATH || __dirname;
+const DATA_DIR = process.env.RAILWAY_VOLUME_MOUNT_PATH || process.env.RENDER_DISK_PATH || __dirname;
 const CONFIG_PATH = path.join(DATA_DIR, 'config.json');
 
-// Copia config.json padrão para o volume na primeira execução
+// Copia config.json padrão para o volume APENAS se ainda não existir
 const DEFAULT_CONFIG_PATH = path.join(__dirname, 'config.json');
-if (!fs.existsSync(CONFIG_PATH) && CONFIG_PATH !== DEFAULT_CONFIG_PATH) {
+if (CONFIG_PATH !== DEFAULT_CONFIG_PATH && !fs.existsSync(CONFIG_PATH)) {
+    fs.mkdirSync(path.dirname(CONFIG_PATH), { recursive: true });
     fs.copyFileSync(DEFAULT_CONFIG_PATH, CONFIG_PATH);
+    console.log('[CONFIG] Primeiro inicio: config.json copiado para o disco persistente.');
+} else if (CONFIG_PATH !== DEFAULT_CONFIG_PATH) {
+    console.log('[CONFIG] Usando config.json salvo no disco persistente.');
 }
 
 function loadConfig() {
