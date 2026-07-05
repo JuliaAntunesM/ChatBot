@@ -212,10 +212,10 @@ const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         const type = req.body.type;
         const dest = type === 'audio'
-            ? path.join(__dirname, 'audios')
+            ? path.join(DATA_DIR, 'audios')
             : (type === 'video' || type === 'gif')
-            ? path.join(__dirname, 'videos')
-            : path.join(__dirname, 'ProvaSocial');
+            ? path.join(DATA_DIR, 'videos')
+            : path.join(DATA_DIR, 'ProvaSocial');
         fs.mkdirSync(dest, { recursive: true });
         cb(null, dest);
     },
@@ -247,7 +247,7 @@ app.get('/api/status', (req, res) => {
 app.post('/api/upload', upload.single('file'), (req, res) => {
     const type = req.body.type;
     const folder = type === 'audio' ? 'audios' : (type === 'video' || type === 'gif') ? 'videos' : 'ProvaSocial';
-    res.json({ path: `./${folder}/${req.file.originalname}` });
+    res.json({ path: path.join(DATA_DIR, folder, req.file.originalname) });
 });
 
 app.listen(3000, () => {
