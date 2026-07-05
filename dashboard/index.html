@@ -463,7 +463,7 @@ function renderMsgTab(node){
 }
 
 function renderMsgItem(m, i){
-  const isFile = m.type==='audio'||m.type==='image';
+  const isFile = m.type==='audio'||m.type==='image'||m.type==='video'||m.type==='gif';
   const isOpcoes = m.type==='opcoes';
   const opts = m.opcoes || [];
   return `
@@ -474,6 +474,8 @@ function renderMsgItem(m, i){
         <option value="opcoes" ${m.type==='opcoes'?'selected':''}>🔢 Lista de opções</option>
         <option value="audio" ${m.type==='audio'?'selected':''}>🎵 Áudio</option>
         <option value="image" ${m.type==='image'?'selected':''}>🖼️ Imagem</option>
+        <option value="video" ${m.type==='video'?'selected':''}>🎬 Vídeo</option>
+        <option value="gif" ${m.type==='gif'?'selected':''}>🎞️ GIF</option>
       </select>
       <input type="number" value="${m.delay||0}" min="0" step="500" title="Delay em ms antes de enviar" onchange="updateMsgDelay(${i},this.value)" style="width:80px"/> ms
     </div>
@@ -481,7 +483,7 @@ function renderMsgItem(m, i){
       ? `<div style="font-size:.75rem;color:var(--muted);margin-bottom:4px">${esc(m.content)}</div>
          <label style="display:block;border:1px dashed var(--border);border-radius:6px;padding:8px;text-align:center;cursor:pointer;font-size:.75rem;color:var(--muted)">
            📂 Trocar arquivo
-           <input type="file" style="display:none" accept="${m.type==='audio'?'audio/*':'image/*'}" onchange="uploadFile(event,${i})"/>
+           <input type="file" style="display:none" accept="${m.type==='audio'?'audio/*':m.type==='video'?'video/*':m.type==='gif'?'image/gif':'image/*'}" onchange="uploadFile(event,${i})"/>
          </label>`
       : isOpcoes
       ? `<div style="font-size:.72rem;color:var(--muted);margin-bottom:5px">Texto da pergunta:</div>
@@ -548,7 +550,7 @@ function setStart(id){ config.startNodeId=id; renderCanvas(); selectNode(id); }
 function addMsg(){ const n=getSelectedNode(); if(!n)return; if(!n.messages)n.messages=[]; n.messages.push({type:'text',content:'',delay:2000}); renderMsgTab(n); }
 function removeMsg(i){ const n=getSelectedNode(); if(!n)return; n.messages.splice(i,1); renderMsgTab(n); refreshNodeEl(n); }
 function moveMsg(i,d){ const n=getSelectedNode(); if(!n)return; const m=n.messages; const t=m[i]; m[i]=m[i+d]; m[i+d]=t; renderMsgTab(n); }
-function updateMsgType(i,v){ const n=getSelectedNode(); if(!n)return; n.messages[i].type=v; if(v==='audio'||v==='image'){ if(!n.messages[i].content.startsWith('./')){ n.messages[i].content=v==='audio'?'./audios/':'./ProvaSocial/'; } } if(v==='opcoes'){ n.messages[i].opcoes=n.messages[i].opcoes||['','','']; } renderMsgTab(n); }
+function updateMsgType(i,v){ const n=getSelectedNode(); if(!n)return; n.messages[i].type=v; if(v==='audio'||v==='image'||v==='video'||v==='gif'){ if(!n.messages[i].content.startsWith('./')){ n.messages[i].content=v==='audio'?'./audios/':v==='video'||v==='gif'?'./videos/':'./ProvaSocial/'; } } if(v==='opcoes'){ n.messages[i].opcoes=n.messages[i].opcoes||['','','']; } renderMsgTab(n); }
 function updateOpcao(mi,oi,v){ const n=getSelectedNode(); if(!n)return; n.messages[mi].opcoes[oi]=v; }
 function addOpcao(mi){ const n=getSelectedNode(); if(!n)return; if(!n.messages[mi].opcoes)n.messages[mi].opcoes=[]; n.messages[mi].opcoes.push(''); renderMsgTab(n); }
 function removeOpcao(mi,oi){ const n=getSelectedNode(); if(!n)return; n.messages[mi].opcoes.splice(oi,1); renderMsgTab(n); }

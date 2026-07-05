@@ -95,6 +95,12 @@ async function sendNode(userId, node, vars) {
         } else if (msg.type === 'image') {
             const media = await MessageMedia.fromFilePath(msg.content);
             await client.sendMessage(userId, media);
+        } else if (msg.type === 'video') {
+            const media = await MessageMedia.fromFilePath(msg.content);
+            await client.sendMessage(userId, media, { sendMediaAsDocument: false });
+        } else if (msg.type === 'gif') {
+            const media = await MessageMedia.fromFilePath(msg.content);
+            await client.sendMessage(userId, media, { sendVideoAsGif: true });
         }
     }
 }
@@ -196,6 +202,8 @@ const storage = multer.diskStorage({
         const type = req.body.type;
         const dest = type === 'audio'
             ? path.join(__dirname, 'audios')
+            : (type === 'video' || type === 'gif')
+            ? path.join(__dirname, 'videos')
             : path.join(__dirname, 'ProvaSocial');
         fs.mkdirSync(dest, { recursive: true });
         cb(null, dest);
@@ -227,7 +235,7 @@ app.get('/api/status', (req, res) => {
 // API: upload de arquivo
 app.post('/api/upload', upload.single('file'), (req, res) => {
     const type = req.body.type;
-    const folder = type === 'audio' ? 'audios' : 'ProvaSocial';
+    const folder = type === 'audio' ? 'audios' : (type === 'video' || type === 'gif') ? 'videos' : 'ProvaSocial';
     res.json({ path: `./${folder}/${req.file.originalname}` });
 });
 
