@@ -125,7 +125,9 @@ function resolveNextNode(node, replyText, config) {
 const userStates = {};
 
 client.on('message', async msg => {
+    console.log(`[MSG] de: ${msg.from} | body: ${msg.body}`);
     if (!msg.from.endsWith('@c.us')) return;
+    if (msg.fromMe) return;
 
     const userId = msg.from;
     const config = loadConfig();
@@ -135,8 +137,10 @@ client.on('message', async msg => {
 
     // Gatilho inicial: usuário não está em nenhum fluxo
     if (!state.currentNodeId) {
-        const pattern = new RegExp((config.triggerWords || []).join('|'), 'i');
-        if (!pattern.test(msg.body)) return;
+        const words = (config.triggerWords || []);
+        const pattern = words.length > 0 ? new RegExp(words.join('|'), 'i') : null;
+        console.log(`[TRIGGER] palavras: ${words.join(',')} | match: ${pattern ? pattern.test(msg.body) : 'sem gatilhos'}`);
+        if (!pattern || !pattern.test(msg.body)) return;
 
         const startNode = config.nodes.find(n => n.id === config.startNodeId);
         if (!startNode) return;
