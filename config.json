@@ -1,97 +1,48 @@
-{
-  "triggerWords": ["oi", "olá", "ola", "bom dia", "boa tarde", "boa noite"],
-  "steps": [
+﻿{
+  "triggerWords": ["oi", "ola", "bom dia", "boa tarde", "boa noite"],
+  "startNodeId": "node-1",
+  "nodes": [
     {
-      "id": 1,
+      "id": "node-1",
       "label": "Boas-vindas",
+      "x": 80,
+      "y": 60,
       "messages": [
-        { "type": "text", "content": "Oi! Tudo bem? Eu sou a professora Natália.🥰", "delay": 0 },
-        { "type": "text", "content": "Antes de tudo! Qual é o seu nome?", "delay": 3000 }
+        { "type": "text", "content": "Ola! Seja bem-vinda! Eu sou a Natalia Fit 😊", "delay": 0 },
+        { "type": "text", "content": "Qual e o seu nome?", "delay": 2000 }
+      ],
+      "waitForReply": true,
+      "saveReplyAs": "nome",
+      "connections": [
+        { "condition": "always", "targetNodeId": "node-2" }
       ]
     },
     {
-      "id": 2,
-      "label": "Recebe o nome",
+      "id": "node-2",
+      "label": "Objetivo",
+      "x": 400,
+      "y": 60,
       "messages": [
-        { "type": "text", "content": "Que bom falar contigo, {nome}!", "delay": 0 },
-        { "type": "text", "content": "Me conta, qual é seu objetivo com os treinos? Quer secar, definir ou levantar o bumbum? Assim posso te ajudar da melhor forma! 🩷🥰Estou aqui pra te ouvir!💗😊", "delay": 5000 }
+        { "type": "text", "content": "Que bom falar contigo, {nome}! 🥰", "delay": 0 },
+        { "type": "text", "content": "Me conta, qual e o seu objetivo? Secar, definir ou levantar o bumbum? 🍑", "delay": 3000 }
+      ],
+      "waitForReply": true,
+      "saveReplyAs": "objetivo",
+      "connections": [
+        { "condition": "always", "targetNodeId": "node-3" }
       ]
     },
     {
-      "id": 3,
-      "label": "Objetivo + Áudios",
+      "id": "node-3",
+      "label": "Encerramento",
+      "x": 720,
+      "y": 60,
       "messages": [
-        { "type": "text", "content": "Entendi, {nome}!", "delay": 0 },
-        { "type": "text", "content": "É normal querer mudanças, e eu estou aqui pra te ajudar a alcançá-las!😍🎉", "delay": 6000 },
-        { "type": "text", "content": "Vou te mandar um áudio rapidinho pra explicar melhor, tá?", "delay": 7000 },
-        { "type": "audio", "content": "./audios/AUDIO1.mp3", "delay": 7000 },
-        { "type": "audio", "content": "./audios/AUDIO2.mp3", "delay": 11000 },
-        { "type": "text", "content": "Fico muito feliz que tenha se interessado e queira saber mais {nome}!🥰💗", "delay": 0 },
-        { "type": "text", "content": "Os os treinos em casa da professora Natália Fit é um método que promete resultados visíveis em apenas 30 dias!😱😍", "delay": 8000 },
-        { "type": "text", "content": "Imagine-se com um corpo mais firme e tonificado, sem precisar de equipamentos caros ou academias lotadas...🥰💗", "delay": 10000 },
-        { "type": "text", "content": "Você já ouviu falar dos nossos treinos em casa?", "delay": 9000 }
-      ]
-    },
-    {
-      "id": 4,
-      "label": "Apresentação do método",
-      "messages": [
-        { "type": "text", "content": "Eles são a solução perfeita para quem deseja transformar o corpo rapidamente!😍🎉", "delay": 0 },
-        { "type": "text", "content": "E se você não notar resultados, garantimos seu dinheiro de volta!😍💰", "delay": 7000 },
-        { "type": "text", "content": "O que torna nossos treinos tão eficaz são as aulas Exclusivas de Treinos Guiados.", "delay": 7000 },
-        { "type": "text", "content": "Com aulas práticas e acessíveis, adaptadas aos seus objetivos, você fará treinos que realmente funcionam!😱😍🎉", "delay": 8000 },
-        { "type": "text", "content": "E tudo isso sob a orientação da Professora Natália Fit, especialista em transformação corporal.💗", "delay": 10000 },
-        { "type": "text", "content": "Quer saber como funciona esse método?", "delay": 5000 }
-      ]
-    },
-    {
-      "id": 5,
-      "label": "Benefícios + Prova Social",
-      "messages": [
-        { "type": "text", "content": "🎁Com os nossos treinos em casa, você pode esperar:\n\n😍Eliminação de Celulite: Aulas focadas para combater a celulite.  \n🍑Flacidez Reduzida: Treinos que tonificam seu corpo.  \n🥦🍎Dicas de Nutrição: Estratégias para maximizar resultados.  \n🥰Apoio Comunitário: Conexão com outras mulheres em busca de transformação.  \n🏆Monitoramento de Progresso: Ferramentas para acompanhar suas melhorias.", "delay": 0 },
-        { "type": "text", "content": "E tudo isso em apenas 30 dias!😍🎉", "delay": 12000 },
-        { "type": "text", "content": "Posso te mostrar alguns depoimentos de mulheres que já usaram o método?", "delay": 7000 },
-        { "type": "text", "content": "Olha o que as mulheres estão falando sobre as aulas da Natália Fit:", "delay": 7000 },
-        { "type": "image", "content": "./ProvaSocial/PROVASOCIAL1.png", "delay": 8000 },
-        { "type": "text", "content": "Outro depoimento:", "delay": 10000 },
-        { "type": "image", "content": "./ProvaSocial/PROVASOCIAL2.png", "delay": 0 },
-        { "type": "text", "content": "E mais um:", "delay": 9000 },
-        { "type": "image", "content": "./ProvaSocial/PROVASOCIAL3.png", "delay": 0 },
-        { "type": "text", "content": "Olha só este relato:", "delay": 9000 },
-        { "type": "image", "content": "./ProvaSocial/PROVASOCIAL4.png", "delay": 0 },
-        { "type": "text", "content": "Está pronta para transformar seu corpo também, {nome}?😍🎉", "delay": 9000 },
-        { "type": "text", "content": "Agora, você deve estar se perguntando quanto custa essa transformação...", "delay": 0 },
-        { "type": "text", "content": "O programa de Treinos da Natália Fit poderia facilmente ser vendido por R$ 997!", "delay": 8000 },
-        { "type": "text", "content": "Mas hoje, você pode começar sua transformação por apenas R$47!😱😍", "delay": 10000 },
-        { "type": "text", "content": "E tem mais, fechando hoje, você ainda leva bônus exclusivos:🎁\n\n🍑Aulas \"Segredos para um Bumbum Perfeito\" \n🥗Guia de Bem-Estar Permanente \n🏆Acesso ao Grupo VIP no WhatsApp", "delay": 9000 },
-        { "type": "text", "content": "E você tem 7 dias de garantia incondicional. Se não gostar, devolvemos seu dinheiro!💰🎁", "delay": 12000 },
-        { "type": "text", "content": "Mas atenção, essa oferta é válida somente para os 50 primeiros inscritos!😱", "delay": 7000 },
-        { "type": "text", "content": "O que você acha, {nome}?", "delay": 8000 }
-      ]
-    },
-    {
-      "id": 6,
-      "label": "Fechamento + Link",
-      "messages": [
-        { "type": "text", "content": "Eu entendo que decidir pode ser difícil...", "delay": 0 },
-        { "type": "text", "content": "Mas continuar como está pode ser ainda mais desgastante, não acha?😫", "delay": 7000 },
-        { "type": "text", "content": "Ao escolher as aulas da Natália Fit, você evita:\n\n😫Perder tempo com soluções que não funcionam.  \n💰Gastar mais dinheiro em tratamentos caros.  \n🍑Deixar problemas de flacidez e celulite piorarem.  \n😰Frustração de não ver resultados.", "delay": 7000 },
-        { "type": "text", "content": "Você está pronta para aproveitar essa oferta de R$47 e transformar seu corpo?😍🎉", "delay": 13000 },
-        { "type": "text", "content": "{nome}, essa é a sua oportunidade incrível!!!🥰💗🎉", "delay": 15000 },
-        { "type": "text", "content": "Clique no link e garanta seu acesso por apenas R$47.🎁", "delay": 8000 },
-        { "type": "text", "content": "Vai ser incrível ter você com a gente!🥰💗", "delay": 7000 },
-        { "type": "text", "content": "Se tiver qualquer dúvida ou precisar de algo, me avisa.", "delay": 7000 },
-        { "type": "text", "content": "E eu tenho uma surpresa pra você, {nome}🎁", "delay": 7000 },
-        { "type": "text", "content": "Assim que finalizar o pagamento, vou liberar um bônus extra que foi autorizado para você por ter ficado comigo até agora...🎁😍😍", "delay": 8000 },
-        { "type": "text", "content": "https://lastlink.com/p/CFBBEB673/checkout-payment/", "delay": 4000 }
-      ]
-    },
-    {
-      "id": 7,
-      "label": "Suporte final",
-      "messages": [
-        { "type": "text", "content": "Se precisar de mais informações, é só me chamar!", "delay": 0 }
-      ]
+        { "type": "text", "content": "Entendi, {nome}! Vou te ajudar a alcancar esse objetivo! 💪", "delay": 0 },
+        { "type": "text", "content": "Clica no link e garanta sua vaga: https://lastlink.com/p/CFBBEB673/checkout-payment/", "delay": 3000 }
+      ],
+      "waitForReply": false,
+      "connections": []
     }
   ]
 }

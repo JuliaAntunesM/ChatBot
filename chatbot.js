@@ -74,21 +74,17 @@ client.initialize();
 const delay = ms => new Promise(res => setTimeout(res, ms));
 
 // ─── Substituir variáveis no texto ───────────────────────────────────────────
-function applyVars(text, state) {
-    return text.replace(/\{nome\}/g, state.nome || '');
+function applyVars(text, vars) {
+    return text.replace(/\{(\w+)\}/g, (_, key) => vars[key] || '');
 }
 
-// ─── Enviar sequência de mensagens de um step ────────────────────────────────
-async function sendStep(userId, stepIndex, state) {
-    const config = loadConfig();
-    const step = config.steps[stepIndex];
-    if (!step) return;
-
-    for (const msg of step.messages) {
+// ─── Enviar mensagens de um nó ────────────────────────────────────────────────
+async function sendNode(userId, node, vars) {
+    for (const msg of (node.messages || [])) {
         if (msg.delay > 0) await delay(msg.delay);
 
         if (msg.type === 'text') {
-            await client.sendMessage(userId, applyVars(msg.content, state));
+            await client.sendMessage(userId, applyVars(msg.content, vars));
         } else if (msg.type === 'audio') {
             const media = await MessageMedia.fromFilePath(msg.content);
             await client.sendMessage(userId, media, { sendAudioAsVoice: true });
@@ -99,6 +95,22 @@ async function sendStep(userId, stepIndex, state) {
     }
 }
 
+// ─── Resolver próximo nó baseado em conexões e resposta ──────────────────────
+function resolveNextNode(node, replyText, config) {
+    const connections = node.connections || [];
+    if (connections.length === 0) return null;
+
+    // Tenta encontrar conexão cuja condição combina com a resposta
+    for (const conn of connections) {
+        if (conn.condition === 'always') return config.nodes.find(n => n.id === conn.targetNodeId) || null;
+        if (replyText && replyText.toLowerCase().includes(conn.condition.toLowerCase())) {
+            return config.nodes.find(n => n.id === conn.targetNodeId) || null;
+        }
+    }
+    // Fallback: usa a primeira conexão
+    return config.nodes.find(n => n.id === connections[0].targetNodeId) || null;
+}
+
 // ─── Estado por usuário ───────────────────────────────────────────────────────
 const userStates = {};
 
@@ -106,36 +118,68 @@ client.on('message', async msg => {
     if (!msg.from.endsWith('@c.us')) return;
 
     const userId = msg.from;
-    if (!userStates[userId]) userStates[userId] = { step: 0 };
-    const state = userStates[userId];
     const config = loadConfig();
 
-    // Gatilho inicial
-    if (state.step === 0) {
-        const pattern = new RegExp(config.triggerWords.join('|'), 'i');
+    if (!userStates[userId]) userStates[userId] = { currentNodeId: null, vars: {}, waitingReply: false };
+    const state = userStates[userId];
+
+    // Gatilho inicial: usuário não está em nenhum fluxo
+    if (!state.currentNodeId) {
+        const pattern = new RegExp((config.triggerWords || []).join('|'), 'i');
         if (!pattern.test(msg.body)) return;
-        state.step = 1;
-        await sendStep(userId, 0, state); // step id=1 → índice 0
-        state.step = 2;
+
+        const startNode = config.nodes.find(n => n.id === config.startNodeId);
+        if (!startNode) return;
+
+        state.currentNodeId = startNode.id;
+        state.waitingReply = false;
+        state.vars = {};
+
+        await sendNode(userId, startNode, state.vars);
+
+        if (startNode.waitForReply) {
+            state.waitingReply = true;
+        } else {
+            await advanceFlow(userId, startNode, '', config);
+        }
         return;
     }
 
-    // Step 2: recebe o nome
-    if (state.step === 2) {
-        state.nome = msg.body.split(' ')[0];
-        await sendStep(userId, 1, state);
-        state.step = 3;
-        return;
-    }
+    // Usuário já está no fluxo e enviou uma resposta
+    if (state.waitingReply) {
+        const currentNode = config.nodes.find(n => n.id === state.currentNodeId);
+        if (!currentNode) { state.currentNodeId = null; return; }
 
-    // Steps 3 a 7: avança automaticamente enviando o próximo step
-    if (state.step >= 3 && state.step <= 7) {
-        const stepIndex = state.step - 1; // step 3 → índice 2, etc.
-        await sendStep(userId, stepIndex, state);
-        state.step = state.step < 7 ? state.step + 1 : 7;
-        return;
+        // Salvar resposta em variável se configurado
+        if (currentNode.saveReplyAs) {
+            state.vars[currentNode.saveReplyAs] = msg.body.split(' ')[0];
+        }
+
+        state.waitingReply = false;
+        await advanceFlow(userId, currentNode, msg.body, config);
     }
 });
+
+async function advanceFlow(userId, currentNode, replyText, config) {
+    const state = userStates[userId];
+    const nextNode = resolveNextNode(currentNode, replyText, config);
+
+    if (!nextNode) {
+        state.currentNodeId = null;
+        state.waitingReply = false;
+        return;
+    }
+
+    state.currentNodeId = nextNode.id;
+    await sendNode(userId, nextNode, state.vars);
+
+    if (nextNode.waitForReply) {
+        state.waitingReply = true;
+    } else {
+        // Avança automaticamente para o próximo sem esperar resposta
+        await advanceFlow(userId, nextNode, '', config);
+    }
+}
 
 // ─── Servidor Express (Dashboard) ────────────────────────────────────────────
 const app = express();

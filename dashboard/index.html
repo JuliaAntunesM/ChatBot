@@ -1,504 +1,615 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ChatBot Dashboard</title>
-  <style>
-    :root {
-      --bg: #0f1117;
-      --surface: #1a1d27;
-      --surface2: #22263a;
-      --border: #2e3347;
-      --accent: #7c3aed;
-      --accent2: #a855f7;
-      --green: #22c55e;
-      --red: #ef4444;
-      --yellow: #eab308;
-      --text: #e2e8f0;
-      --muted: #94a3b8;
-      --radius: 12px;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; min-height: 100vh; }
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ChatBot — Editor de Fluxo</title>
+<style>
+:root{--bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3347;--accent:#7c3aed;--accent2:#a855f7;--green:#22c55e;--red:#ef4444;--yellow:#eab308;--text:#e2e8f0;--muted:#94a3b8;--r:12px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;height:100vh;display:flex;flex-direction:column;overflow:hidden}
 
-    header {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 16px 32px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky; top: 0; z-index: 100;
-    }
-    header h1 { font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
-    header h1 span { font-size: 1.5rem; }
+/* HEADER */
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;gap:16px;flex-shrink:0;z-index:50}
+header h1{font-size:1rem;font-weight:700;display:flex;align-items:center;gap:8px}
+.status-badge{display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;font-size:.8rem;font-weight:600;background:var(--surface2);border:1px solid var(--border);margin-left:auto}
+.dot{width:8px;height:8px;border-radius:50%}
+.dot.green{background:var(--green);box-shadow:0 0 6px var(--green)}
+.dot.red{background:var(--red)}
+.dot.yellow{background:var(--yellow);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
-    .status-badge {
-      display: flex; align-items: center; gap: 8px;
-      padding: 6px 14px; border-radius: 20px;
-      font-size: 0.85rem; font-weight: 600;
-      background: var(--surface2); border: 1px solid var(--border);
-    }
-    .dot { width: 9px; height: 9px; border-radius: 50%; }
-    .dot.green { background: var(--green); box-shadow: 0 0 8px var(--green); }
-    .dot.red { background: var(--red); }
-    .dot.yellow { background: var(--yellow); animation: pulse 1s infinite; }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+/* TOOLBAR */
+.toolbar{background:var(--surface);border-bottom:1px solid var(--border);padding:8px 20px;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.btn{padding:7px 14px;border-radius:8px;border:none;cursor:pointer;font-size:.8rem;font-weight:600;transition:all .15s;display:flex;align-items:center;gap:6px}
+.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:var(--accent2)}
+.btn-success{background:var(--green);color:#000}.btn-success:hover{opacity:.85}
+.btn-danger{background:transparent;color:var(--red);border:1px solid var(--red)}.btn-danger:hover{background:var(--red);color:#fff}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border)}.btn-ghost:hover{background:var(--surface2);color:var(--text)}
+.sep{width:1px;height:24px;background:var(--border);margin:0 4px}
 
-    .layout { display: flex; min-height: calc(100vh - 65px); }
+/* LAYOUT */
+.workspace{display:flex;flex:1;overflow:hidden}
 
-    .sidebar {
-      width: 260px; flex-shrink: 0;
-      background: var(--surface);
-      border-right: 1px solid var(--border);
-      padding: 20px 0;
-    }
-    .sidebar-title { font-size: 0.7rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; padding: 0 20px 10px; }
-    .step-item {
-      display: flex; align-items: center; gap: 12px;
-      padding: 12px 20px; cursor: pointer;
-      border-left: 3px solid transparent;
-      transition: all 0.15s;
-    }
-    .step-item:hover { background: var(--surface2); }
-    .step-item.active { background: var(--surface2); border-left-color: var(--accent); }
-    .step-num {
-      width: 28px; height: 28px; border-radius: 50%;
-      background: var(--surface2); border: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.75rem; font-weight: 700; color: var(--muted); flex-shrink: 0;
-    }
-    .step-item.active .step-num { background: var(--accent); border-color: var(--accent); color: #fff; }
-    .step-label { font-size: 0.875rem; font-weight: 500; }
-    .step-count { margin-left: auto; font-size: 0.75rem; color: var(--muted); }
+/* CANVAS */
+#canvas-wrap{flex:1;position:relative;overflow:hidden;background:var(--bg);background-image:radial-gradient(var(--border) 1px,transparent 1px);background-size:28px 28px}
+#canvas{position:absolute;top:0;left:0;width:100%;height:100%}
+svg#arrows{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible}
 
-    .main { flex: 1; padding: 28px 32px; overflow-y: auto; }
+/* NODES */
+.flow-node{position:absolute;width:220px;background:var(--surface);border:2px solid var(--border);border-radius:var(--r);cursor:grab;user-select:none;transition:border-color .15s;box-shadow:0 4px 20px #0006}
+.flow-node:active{cursor:grabbing}
+.flow-node.selected{border-color:var(--accent);box-shadow:0 0 0 3px #7c3aed33}
+.flow-node.start-node{border-color:var(--green)}
+.node-header{background:var(--surface2);border-radius:10px 10px 0 0;padding:10px 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)}
+.node-icon{font-size:1rem}
+.node-title{font-size:.85rem;font-weight:700;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.node-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;line-height:1;padding:2px 4px;border-radius:4px}
+.node-del:hover{color:var(--red)}
+.node-body{padding:10px 12px}
+.node-preview{font-size:.75rem;color:var(--muted);line-height:1.4;max-height:52px;overflow:hidden}
+.node-footer{padding:8px 12px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.node-tag{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:2px 7px;border-radius:10px}
+.tag-wait{background:#1e3a5f;color:#60a5fa}
+.tag-auto{background:#1a3a2a;color:#4ade80}
+.connect-btn{width:22px;height:22px;border-radius:50%;background:var(--accent);border:none;color:#fff;cursor:crosshair;font-size:.9rem;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.connect-btn:hover{background:var(--accent2)}
 
-    .tabs { display: flex; gap: 4px; margin-bottom: 24px; background: var(--surface); border-radius: var(--radius); padding: 4px; width: fit-content; border: 1px solid var(--border); }
-    .tab { padding: 8px 18px; border-radius: 8px; cursor: pointer; font-size: 0.875rem; font-weight: 500; color: var(--muted); transition: all 0.15s; border: none; background: none; }
-    .tab.active { background: var(--accent); color: #fff; }
+/* PANEL LATERAL */
+.side-panel{width:320px;flex-shrink:0;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.panel-header{padding:14px 16px;border-bottom:1px solid var(--border);font-weight:700;font-size:.9rem;display:flex;align-items:center;justify-content:space-between}
+.panel-body{flex:1;overflow-y:auto;padding:16px}
+.panel-empty{color:var(--muted);font-size:.85rem;text-align:center;padding:40px 20px}
 
-    .panel { display: none; }
-    .panel.active { display: block; }
+/* FORM */
+.field{margin-bottom:14px}
+.field-label{font-size:.7rem;color:var(--muted);margin-bottom:5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+input[type=text],textarea,select{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:.83rem;font-family:inherit;transition:border-color .15s}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent)}
+textarea{resize:vertical;min-height:64px}
 
-    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
-    .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
-    .card-title { font-size: 0.95rem; font-weight: 600; }
+/* MENSAGENS NO PAINEL */
+.msg-item{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px}
+.msg-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.msg-row select{flex:1}
+.msg-row input{width:80px}
+.msg-actions-row{display:flex;gap:6px;margin-top:6px}
+.btn-xs{padding:4px 8px;font-size:.72rem;border-radius:6px}
+.add-msg{width:100%;padding:8px;border:1px dashed var(--border);background:transparent;color:var(--muted);border-radius:8px;cursor:pointer;font-size:.8rem;margin-top:4px}
+.add-msg:hover{border-color:var(--accent);color:var(--accent)}
 
-    .step-editor { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-    .step-editor-header { background: var(--surface2); padding: 16px 20px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); }
-    .step-editor-title { font-weight: 700; font-size: 1rem; }
-    .step-editor-body { padding: 20px; }
+/* CONNECTIONS NO PAINEL */
+.conn-item{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px;display:flex;gap:8px;align-items:center}
+.conn-item select{flex:1}
+.arrow-line{stroke:var(--accent);stroke-width:2;fill:none;marker-end:url(#arrow)}
+.arrow-line.temp{stroke:var(--yellow);stroke-dasharray:6}
 
-    .message-block {
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 10px; padding: 16px; margin-bottom: 12px; position: relative;
-    }
-    .message-block-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-    .type-badge {
-      font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
-      padding: 3px 8px; border-radius: 6px;
-    }
-    .type-badge.text { background: #1e3a5f; color: #60a5fa; }
-    .type-badge.audio { background: #1a3a2a; color: #4ade80; }
-    .type-badge.image { background: #3a1a3a; color: #e879f9; }
+/* TABS PAINEL */
+.panel-tabs{display:flex;border-bottom:1px solid var(--border)}
+.panel-tab{flex:1;padding:9px;font-size:.8rem;font-weight:600;cursor:pointer;border:none;background:none;color:var(--muted);border-bottom:2px solid transparent}
+.panel-tab.active{color:var(--text);border-bottom-color:var(--accent)}
 
-    .delay-badge {
-      margin-left: auto; font-size: 0.75rem; color: var(--muted);
-      display: flex; align-items: center; gap: 4px;
-    }
+/* QR */
+.qr-section{padding:20px;text-align:center}
+#qr-img{max-width:200px;border-radius:10px;border:3px solid var(--accent);margin-bottom:12px}
+#qr-ph{width:200px;height:200px;background:var(--surface2);border:1px dashed var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;color:var(--muted);font-size:.8rem;text-align:center}
 
-    textarea {
-      width: 100%; background: var(--bg); border: 1px solid var(--border);
-      border-radius: 8px; padding: 10px 12px; color: var(--text);
-      font-size: 0.875rem; resize: vertical; min-height: 72px; font-family: inherit;
-      transition: border-color 0.15s;
-    }
-    textarea:focus { outline: none; border-color: var(--accent); }
+.toast{position:fixed;bottom:20px;right:20px;background:var(--green);color:#000;padding:10px 18px;border-radius:8px;font-weight:700;font-size:.83rem;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:none;z-index:999}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.error{background:var(--red);color:#fff}
 
-    input[type=text], input[type=number] {
-      background: var(--bg); border: 1px solid var(--border);
-      border-radius: 8px; padding: 8px 12px; color: var(--text);
-      font-size: 0.875rem; width: 100%; font-family: inherit;
-      transition: border-color 0.15s;
-    }
-    input:focus { outline: none; border-color: var(--accent); }
-
-    .field-group { margin-bottom: 12px; }
-    .field-label { font-size: 0.75rem; color: var(--muted); margin-bottom: 6px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-
-    .btn {
-      padding: 9px 18px; border-radius: 8px; border: none; cursor: pointer;
-      font-size: 0.875rem; font-weight: 600; transition: all 0.15s;
-    }
-    .btn-primary { background: var(--accent); color: #fff; }
-    .btn-primary:hover { background: var(--accent2); }
-    .btn-danger { background: transparent; color: var(--red); border: 1px solid var(--red); }
-    .btn-danger:hover { background: var(--red); color: #fff; }
-    .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
-    .btn-ghost:hover { background: var(--surface2); color: var(--text); }
-    .btn-sm { padding: 5px 12px; font-size: 0.8rem; }
-    .btn-green { background: var(--green); color: #000; }
-    .btn-green:hover { opacity: 0.85; }
-
-    .actions-bar { display: flex; gap: 10px; margin-top: 20px; }
-
-    .msg-actions { position: absolute; top: 12px; right: 12px; display: flex; gap: 6px; }
-
-    .add-msg-btn {
-      width: 100%; padding: 10px; border-radius: 8px; border: 1px dashed var(--border);
-      background: transparent; color: var(--muted); cursor: pointer; font-size: 0.875rem;
-      transition: all 0.15s; margin-top: 4px;
-    }
-    .add-msg-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--surface2); }
-
-    .file-upload {
-      border: 1px dashed var(--border); border-radius: 8px; padding: 16px;
-      text-align: center; cursor: pointer; transition: all 0.15s;
-    }
-    .file-upload:hover { border-color: var(--accent); }
-    .file-upload input { display: none; }
-    .file-upload .file-name { font-size: 0.8rem; color: var(--muted); margin-top: 6px; }
-
-    /* QR Code panel */
-    .qr-wrapper {
-      display: flex; flex-direction: column; align-items: center;
-      gap: 20px; padding: 40px;
-    }
-    #qr-img { border-radius: 12px; border: 4px solid var(--accent); max-width: 220px; }
-    #qr-placeholder { width: 220px; height: 220px; background: var(--surface2); border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 1px dashed var(--border); color: var(--muted); font-size: 0.875rem; text-align: center; }
-
-    /* Trigger words */
-    .tags { display: flex; flex-wrap: wrap; gap: 8px; }
-    .tag {
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 20px; padding: 4px 12px; font-size: 0.8rem;
-      display: flex; align-items: center; gap: 6px;
-    }
-    .tag button { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 1rem; line-height: 1; }
-    .tag-input-row { display: flex; gap: 8px; margin-top: 10px; }
-    .tag-input-row input { flex: 1; }
-
-    .toast {
-      position: fixed; bottom: 24px; right: 24px;
-      background: var(--green); color: #000; padding: 12px 20px;
-      border-radius: 10px; font-weight: 600; font-size: 0.875rem;
-      opacity: 0; transform: translateY(10px); transition: all 0.3s; pointer-events: none; z-index: 999;
-    }
-    .toast.show { opacity: 1; transform: translateY(0); }
-    .toast.error { background: var(--red); color: #fff; }
-
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    @media(max-width:900px){ .grid-2 { grid-template-columns:1fr; } .sidebar { display:none; } }
-
-    select {
-      background: var(--bg); border: 1px solid var(--border);
-      border-radius: 8px; padding: 8px 12px; color: var(--text);
-      font-size: 0.875rem; cursor: pointer;
-    }
-    select:focus { outline: none; border-color: var(--accent); }
-
-    .connector { text-align: center; color: var(--muted); font-size: 1.2rem; margin: 4px 0; }
-
-    .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
-    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
-    .stat-card .stat-val { font-size: 2rem; font-weight: 800; }
-    .stat-card .stat-label { font-size: 0.8rem; color: var(--muted); margin-top: 4px; }
-  </style>
+.trigger-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.t-tag{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:.75rem;display:flex;align-items:center;gap:5px}
+.t-tag button{background:none;border:none;color:var(--muted);cursor:pointer}
+.tag-row{display:flex;gap:6px}
+.tag-row input{flex:1}
+</style>
 </head>
 <body>
+
 <header>
-  <h1><span>🤖</span> ChatBot Dashboard — Natália Fit</h1>
-  <div class="status-badge">
-    <div class="dot" id="status-dot" style="background:var(--red)"></div>
-    <span id="status-text">Desconectado</span>
+  <h1>🤖 ChatBot — Editor de Fluxo</h1>
+  <div style="display:flex;align-items:center;gap:10px;margin-left:auto">
+    <div class="status-badge">
+      <div class="dot" id="status-dot" style="background:var(--red)"></div>
+      <span id="status-text">Desconectado</span>
+    </div>
   </div>
 </header>
 
-<div class="layout">
-  <!-- Sidebar com steps -->
-  <aside class="sidebar">
-    <div class="sidebar-title">Fluxo de Conversa</div>
-    <div id="steps-sidebar"></div>
-  </aside>
+<div class="toolbar">
+  <button class="btn btn-primary" onclick="addNode()">＋ Novo Bloco</button>
+  <div class="sep"></div>
+  <button class="btn btn-ghost" onclick="showTab('flow')" id="tab-flow">🗺 Fluxo</button>
+  <button class="btn btn-ghost" onclick="showTab('triggers')" id="tab-triggers">🔑 Gatilhos</button>
+  <button class="btn btn-ghost" onclick="showTab('qr')" id="tab-qr">📱 Conexão</button>
+  <div class="sep"></div>
+  <button class="btn btn-success" onclick="saveConfig()">💾 Salvar</button>
+  <button class="btn btn-ghost" onclick="loadConfig()">🔄 Recarregar</button>
+  <div style="margin-left:auto;font-size:.75rem;color:var(--muted)">Arraste os blocos • Clique para editar • ⊕ para conectar</div>
+</div>
 
-  <!-- Conteúdo principal -->
-  <main class="main">
-    <div class="tabs">
-      <button class="tab active" onclick="showTab('flow')">📋 Fluxo</button>
-      <button class="tab" onclick="showTab('settings')">⚙️ Configurações</button>
-      <button class="tab" onclick="showTab('connection')">📱 Conexão</button>
-    </div>
+<div class="workspace">
+  <!-- CANVAS -->
+  <div id="canvas-wrap">
+    <svg id="arrows">
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L8,3 z" fill="#7c3aed"/>
+        </marker>
+        <marker id="arrow-yellow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L8,3 z" fill="#eab308"/>
+        </marker>
+      </defs>
+    </svg>
+    <div id="canvas"></div>
+  </div>
 
-    <!-- Painel: Fluxo -->
-    <div class="panel active" id="panel-flow">
-      <div id="step-editor-area"></div>
-    </div>
-
-    <!-- Painel: Configurações -->
-    <div class="panel" id="panel-settings">
-      <div class="card">
-        <div class="card-header"><span class="card-title">🔑 Palavras-gatilho</span></div>
-        <p style="font-size:0.85rem;color:var(--muted);margin-bottom:14px;">O bot responde quando a primeira mensagem contiver uma dessas palavras:</p>
-        <div class="tags" id="trigger-tags"></div>
-        <div class="tag-input-row">
-          <input type="text" id="new-trigger" placeholder="Nova palavra..." />
-          <button class="btn btn-primary btn-sm" onclick="addTrigger()">Adicionar</button>
-        </div>
+  <!-- PAINEL LATERAL -->
+  <div class="side-panel" id="side-panel">
+    <!-- TAB: FLUXO / EDITOR DE NÓ -->
+    <div id="panel-flow">
+      <div class="panel-tabs">
+        <button class="panel-tab active" id="ptab-msg" onclick="switchPanelTab('msg')">💬 Mensagens</button>
+        <button class="panel-tab" id="ptab-conn" onclick="switchPanelTab('conn')">🔗 Conexões</button>
+      </div>
+      <div class="panel-body" id="panel-body">
+        <div class="panel-empty">👈 Clique em um bloco para editar</div>
       </div>
     </div>
 
-    <!-- Painel: Conexão / QR -->
-    <div class="panel" id="panel-connection">
-      <div class="card">
-        <div class="card-header"><span class="card-title">📱 Conexão com WhatsApp</span></div>
-        <div class="qr-wrapper">
-          <div id="qr-placeholder">
-            <div>
-              <div style="font-size:2.5rem;margin-bottom:8px">📲</div>
-              <div>Aguardando QR Code...</div>
-              <div style="margin-top:8px;font-size:0.75rem">Inicie o bot para gerar o QR</div>
-            </div>
-          </div>
-          <img id="qr-img" style="display:none" alt="QR Code" />
-          <div id="connection-msg" style="font-size:0.9rem;color:var(--muted);text-align:center"></div>
-        </div>
+    <!-- TAB: GATILHOS -->
+    <div id="panel-triggers" style="display:none;padding:16px">
+      <div style="font-size:.8rem;color:var(--muted);margin-bottom:12px">O bot responde quando a mensagem contiver uma dessas palavras:</div>
+      <div class="trigger-tags" id="trigger-tags"></div>
+      <div class="tag-row">
+        <input type="text" id="new-trigger" placeholder="nova palavra..."/>
+        <button class="btn btn-primary btn-xs" onclick="addTrigger()">＋</button>
       </div>
     </div>
 
-    <div class="actions-bar">
-      <button class="btn btn-primary" onclick="saveConfig()">💾 Salvar Alterações</button>
-      <button class="btn btn-ghost" onclick="loadConfig()">🔄 Recarregar</button>
+    <!-- TAB: QR -->
+    <div id="panel-qr" style="display:none">
+      <div class="qr-section">
+        <div id="qr-ph"><div>📲<br><br>Aguardando QR Code...</div></div>
+        <img id="qr-img" style="display:none" alt="QR"/>
+        <div id="conn-msg" style="font-size:.83rem;color:var(--muted)"></div>
+      </div>
     </div>
-  </main>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-let config = { triggerWords: [], steps: [] };
-let activeStep = 0;
+// ── Estado ────────────────────────────────────────────────────────────────────
+let config = { triggerWords:[], startNodeId:'', nodes:[] };
+let selectedNodeId = null;
+let panelTab = 'msg';
+let connectingFrom = null; // nodeId sendo conectado
 
-async function loadConfig() {
-  const res = await fetch('/api/config');
-  config = await res.json();
-  renderSidebar();
-  renderStepEditor(activeStep);
-  renderTriggers();
-}
+// Drag
+let dragNode = null, dragOX = 0, dragOY = 0;
+// Pan
+let panning = false, panX = 0, panY = 0, panSX = 0, panSY = 0;
+let offsetX = 0, offsetY = 0;
 
-async function saveConfig() {
-  const res = await fetch('/api/config', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(config)
-  });
-  if (res.ok) showToast('✅ Configurações salvas!');
-  else showToast('❌ Erro ao salvar!', true);
-}
-
-function renderSidebar() {
-  const el = document.getElementById('steps-sidebar');
-  el.innerHTML = config.steps.map((s, i) => `
-    <div class="step-item ${i === activeStep ? 'active' : ''}" onclick="selectStep(${i})">
-      <div class="step-num">${s.id}</div>
-      <div class="step-label">${s.label}</div>
-      <div class="step-count">${s.messages.length}</div>
-    </div>
-  `).join('');
-}
-
-function selectStep(i) {
-  activeStep = i;
-  renderSidebar();
-  renderStepEditor(i);
-}
-
-function renderStepEditor(i) {
-  const step = config.steps[i];
-  if (!step) return;
-  const area = document.getElementById('step-editor-area');
-  area.innerHTML = `
-    <div class="step-editor">
-      <div class="step-editor-header">
-        <div class="step-num" style="width:32px;height:32px;font-size:0.85rem;background:var(--accent);border-color:var(--accent);color:#fff">${step.id}</div>
-        <div>
-          <div class="step-editor-title">${step.label}</div>
-          <div style="font-size:0.75rem;color:var(--muted)">${step.messages.length} mensagem(ns)</div>
-        </div>
-        <div style="margin-left:auto;display:flex;gap:8px">
-          <input type="text" value="${step.label}" style="width:200px" onchange="step.label=this.value;renderSidebar()" placeholder="Nome do step" />
-        </div>
-      </div>
-      <div class="step-editor-body">
-        <div id="messages-list">
-          ${step.messages.map((m, mi) => renderMessageBlock(m, mi, i)).join('<div class="connector">↓</div>')}
-        </div>
-        <button class="add-msg-btn" onclick="addMessage(${i})">+ Adicionar mensagem</button>
-      </div>
-    </div>
-  `;
-}
-
-function renderMessageBlock(m, mi, si) {
-  const typeColors = { text: 'text', audio: 'audio', image: 'image' };
-  const typeIcons = { text: '💬', audio: '🎵', image: '🖼️' };
-  const isFile = m.type === 'audio' || m.type === 'image';
-
-  return `
-    <div class="message-block" id="msg-${si}-${mi}">
-      <div class="msg-actions">
-        ${mi > 0 ? `<button class="btn btn-ghost btn-sm" onclick="moveMsg(${si},${mi},-1)" title="Mover para cima">↑</button>` : ''}
-        ${mi < config.steps[si].messages.length-1 ? `<button class="btn btn-ghost btn-sm" onclick="moveMsg(${si},${mi},1)" title="Mover para baixo">↓</button>` : ''}
-        <button class="btn btn-danger btn-sm" onclick="removeMsg(${si},${mi})">✕</button>
-      </div>
-      <div class="message-block-header">
-        <span class="type-badge ${typeColors[m.type]}">${typeIcons[m.type]} ${m.type}</span>
-        <select onchange="changeType(${si},${mi},this.value)">
-          <option value="text" ${m.type==='text'?'selected':''}>Texto</option>
-          <option value="audio" ${m.type==='audio'?'selected':''}>Áudio</option>
-          <option value="image" ${m.type==='image'?'selected':''}>Imagem</option>
-        </select>
-        <div class="delay-badge">⏱️ delay: 
-          <input type="number" value="${m.delay}" min="0" step="500" style="width:90px"
-            onchange="config.steps[${si}].messages[${mi}].delay=parseInt(this.value)||0" /> ms
-        </div>
-      </div>
-      ${isFile ? `
-        <div class="field-group">
-          <div class="field-label">Arquivo atual</div>
-          <div style="font-size:0.8rem;color:var(--muted);margin-bottom:8px">${m.content}</div>
-          <label class="file-upload">
-            <input type="file" accept="${m.type==='audio'?'audio/*':'image/*'}" onchange="uploadFile(event,${si},${mi})" />
-            <div>📂 Clique para substituir o arquivo</div>
-            <div class="file-name" id="fname-${si}-${mi}"></div>
-          </label>
-        </div>
-      ` : `
-        <div class="field-group">
-          <div class="field-label">Mensagem <span style="color:var(--muted);font-weight:400">(use {nome} para o nome do cliente)</span></div>
-          <textarea onchange="config.steps[${si}].messages[${mi}].content=this.value">${escHtml(m.content)}</textarea>
-        </div>
-      `}
-    </div>
-  `;
-}
-
-function escHtml(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-function addMessage(si) {
-  config.steps[si].messages.push({ type: 'text', content: '', delay: 3000 });
-  renderStepEditor(si);
-}
-
-function removeMsg(si, mi) {
-  config.steps[si].messages.splice(mi, 1);
-  renderStepEditor(si);
-}
-
-function moveMsg(si, mi, dir) {
-  const msgs = config.steps[si].messages;
-  const tmp = msgs[mi]; msgs[mi] = msgs[mi+dir]; msgs[mi+dir] = tmp;
-  renderStepEditor(si);
-}
-
-function changeType(si, mi, type) {
-  config.steps[si].messages[mi].type = type;
-  if (type !== 'text' && !config.steps[si].messages[mi].content.startsWith('./')) {
-    config.steps[si].messages[mi].content = type === 'audio' ? './audios/' : './ProvaSocial/';
-  }
-  renderStepEditor(si);
-}
-
-async function uploadFile(event, si, mi) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const form = new FormData();
-  form.append('file', file);
-  form.append('type', config.steps[si].messages[mi].type);
-  const res = await fetch('/api/upload', { method: 'POST', body: form });
-  const data = await res.json();
-  if (data.path) {
-    config.steps[si].messages[mi].content = data.path;
-    document.getElementById(`fname-${si}-${mi}`).textContent = '✅ ' + file.name;
-    showToast('Arquivo enviado: ' + file.name);
-  }
-}
-
-function renderTriggers() {
-  const el = document.getElementById('trigger-tags');
-  el.innerHTML = config.triggerWords.map((w, i) => `
-    <div class="tag">${w}<button onclick="removeTrigger(${i})">×</button></div>
-  `).join('');
-}
-
-function addTrigger() {
-  const inp = document.getElementById('new-trigger');
-  const val = inp.value.trim().toLowerCase();
-  if (val && !config.triggerWords.includes(val)) {
-    config.triggerWords.push(val);
-    renderTriggers();
-    inp.value = '';
-  }
-}
-
-function removeTrigger(i) {
-  config.triggerWords.splice(i, 1);
-  renderTriggers();
-}
-
-function showTab(name) {
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('panel-' + name).classList.add('active');
-  event.target.classList.add('active');
-}
-
-function showToast(msg, isError = false) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast show' + (isError ? ' error' : '');
-  setTimeout(() => t.className = 'toast', 3000);
-}
-
-// Polling de status e QR
-async function pollStatus() {
-  try {
-    const res = await fetch('/api/status');
-    const data = await res.json();
-    const dot = document.getElementById('status-dot');
-    const txt = document.getElementById('status-text');
-    const qrImg = document.getElementById('qr-img');
-    const qrPh = document.getElementById('qr-placeholder');
-    const msg = document.getElementById('connection-msg');
-
-    if (data.status === 'ready') {
-      dot.style.background = 'var(--green)'; dot.style.boxShadow = '0 0 8px var(--green)';
-      txt.textContent = 'Conectado';
-      qrImg.style.display = 'none'; qrPh.style.display = 'none';
-      msg.innerHTML = '✅ <strong>WhatsApp conectado!</strong><br>O bot está ativo e recebendo mensagens.';
-    } else if (data.status === 'qr') {
-      dot.style.background = 'var(--yellow)'; dot.style.boxShadow = '';
-      txt.textContent = 'Aguardando QR';
-      qrPh.style.display = 'none';
-      qrImg.src = data.qr;
-      qrImg.style.display = 'block';
-      msg.textContent = 'Escaneie o QR Code com seu WhatsApp';
-    } else {
-      dot.style.background = 'var(--red)'; dot.style.boxShadow = '';
-      txt.textContent = 'Desconectado';
-      qrImg.style.display = 'none'; qrPh.style.display = 'flex';
-      msg.textContent = 'Bot não está rodando ou aguardando inicialização.';
-    }
-  } catch {}
-}
-
+// ── Boot ──────────────────────────────────────────────────────────────────────
+loadConfig();
 setInterval(pollStatus, 3000);
 pollStatus();
-loadConfig();
+
+// ── API ───────────────────────────────────────────────────────────────────────
+async function loadConfig(){
+  const r = await fetch('/api/config');
+  config = await r.json();
+  if(!config.nodes) config.nodes = [];
+  renderCanvas();
+  renderTriggers();
+}
+
+async function saveConfig(){
+  const r = await fetch('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(config)});
+  r.ok ? showToast('✅ Salvo!') : showToast('❌ Erro ao salvar','error');
+}
+
+async function pollStatus(){
+  try{
+    const d = await (await fetch('/api/status')).json();
+    const dot=document.getElementById('status-dot'), txt=document.getElementById('status-text');
+    const qrImg=document.getElementById('qr-img'), qrPh=document.getElementById('qr-ph');
+    const msg=document.getElementById('conn-msg');
+    if(d.status==='ready'){
+      dot.style.cssText='background:var(--green);box-shadow:0 0 6px var(--green)';
+      txt.textContent='Conectado';
+      qrImg.style.display='none'; qrPh.style.display='none';
+      msg.innerHTML='✅ <strong>WhatsApp conectado!</strong>';
+    } else if(d.status==='qr'){
+      dot.style.cssText='background:var(--yellow)';
+      txt.textContent='Aguardando QR';
+      qrPh.style.display='none';
+      qrImg.src=d.qr; qrImg.style.display='block';
+      msg.textContent='Escaneie o QR Code com o WhatsApp';
+    } else {
+      dot.style.cssText='background:var(--red)';
+      txt.textContent='Desconectado';
+      qrImg.style.display='none'; qrPh.style.display='flex';
+      msg.textContent='';
+    }
+  }catch{}
+}
+
+// ── Canvas ────────────────────────────────────────────────────────────────────
+function renderCanvas(){
+  const canvas = document.getElementById('canvas');
+  canvas.innerHTML = '';
+  config.nodes.forEach(n => createNodeEl(n));
+  renderAllArrows();
+}
+
+function createNodeEl(node){
+  const canvas = document.getElementById('canvas');
+  const el = document.createElement('div');
+  el.className = 'flow-node' + (node.id === config.startNodeId ? ' start-node' : '') + (node.id === selectedNodeId ? ' selected' : '');
+  el.id = 'node-el-' + node.id;
+  el.style.left = (node.x || 80) + 'px';
+  el.style.top  = (node.y || 80) + 'px';
+
+  const preview = (node.messages||[]).map(m => m.type==='text' ? m.content : '['+m.type+']').join(' • ').slice(0,80);
+  const isStart = node.id === config.startNodeId;
+  const waitTag = node.waitForReply
+    ? '<span class="node-tag tag-wait">⏳ Aguarda resposta</span>'
+    : '<span class="node-tag tag-auto">⚡ Automático</span>';
+
+  el.innerHTML = `
+    <div class="node-header">
+      <span class="node-icon">${isStart ? '🟢' : '📦'}</span>
+      <span class="node-title">${esc(node.label||'Sem nome')}</span>
+      <button class="node-del" onclick="deleteNode('${node.id}')" title="Excluir bloco">✕</button>
+    </div>
+    <div class="node-body">
+      <div class="node-preview">${esc(preview||'(sem mensagens)')}</div>
+    </div>
+    <div class="node-footer">
+      ${waitTag}
+      <button class="connect-btn" title="Conectar a outro bloco" onclick="startConnect('${node.id}',event)">⊕</button>
+    </div>
+  `;
+
+  // Drag
+  el.addEventListener('mousedown', e => {
+    if(e.target.classList.contains('connect-btn') || e.target.classList.contains('node-del')) return;
+    dragNode = node;
+    const rect = el.getBoundingClientRect();
+    const wrap = document.getElementById('canvas-wrap').getBoundingClientRect();
+    dragOX = e.clientX - rect.left;
+    dragOY = e.clientY - rect.top;
+    e.preventDefault();
+  });
+
+  // Clique para selecionar
+  el.addEventListener('click', e => {
+    if(e.target.classList.contains('connect-btn') || e.target.classList.contains('node-del')) return;
+    if(connectingFrom){
+      finishConnect(node.id);
+      return;
+    }
+    selectNode(node.id);
+  });
+
+  canvas.appendChild(el);
+}
+
+// Mouse move / up globais
+document.addEventListener('mousemove', e => {
+  if(dragNode){
+    const wrap = document.getElementById('canvas-wrap');
+    const rect = wrap.getBoundingClientRect();
+    dragNode.x = e.clientX - rect.left - dragOX - offsetX;
+    dragNode.y = e.clientY - rect.top  - dragOY - offsetY;
+    const el = document.getElementById('node-el-' + dragNode.id);
+    if(el){ el.style.left = (dragNode.x)+'px'; el.style.top = (dragNode.y)+'px'; }
+    renderAllArrows();
+  }
+  if(connectingFrom){
+    drawTempArrow(e);
+  }
+});
+document.addEventListener('mouseup', () => {
+  dragNode = null;
+});
+
+// ── Setas ─────────────────────────────────────────────────────────────────────
+function renderAllArrows(){
+  const svg = document.getElementById('arrows');
+  // remove antigas
+  svg.querySelectorAll('.arrow-line, .arrow-label').forEach(e => e.remove());
+
+  config.nodes.forEach(node => {
+    (node.connections||[]).forEach(conn => {
+      const from = node;
+      const to = config.nodes.find(n => n.id === conn.targetNodeId);
+      if(!from || !to) return;
+      drawArrow(svg, from, to, conn.condition);
+    });
+  });
+}
+
+function nodeCenter(node){
+  return { x: (node.x||0) + 110, y: (node.y||0) + 60 };
+}
+
+function drawArrow(svg, from, to, condition){
+  const f = nodeCenter(from);
+  const t = nodeCenter(to);
+  const dx = t.x - f.x, dy = t.y - f.y;
+  const mx = f.x + dx*0.5, my = f.y + dy*0.5;
+
+  const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+  path.setAttribute('class','arrow-line');
+  path.setAttribute('d', `M${f.x},${f.y} C${f.x+80},${f.y} ${t.x-80},${t.y} ${t.x},${t.y}`);
+  path.setAttribute('marker-end','url(#arrow)');
+  svg.appendChild(path);
+
+  if(condition && condition !== 'always'){
+    const txt = document.createElementNS('http://www.w3.org/2000/svg','text');
+    txt.setAttribute('class','arrow-label');
+    txt.setAttribute('x', mx); txt.setAttribute('y', my-6);
+    txt.setAttribute('text-anchor','middle');
+    txt.setAttribute('fill','#94a3b8');
+    txt.setAttribute('font-size','11');
+    txt.textContent = condition;
+    svg.appendChild(txt);
+  }
+}
+
+let tempArrowEl = null;
+function drawTempArrow(e){
+  const svg = document.getElementById('arrows');
+  if(tempArrowEl) tempArrowEl.remove();
+  const from = config.nodes.find(n => n.id === connectingFrom);
+  if(!from) return;
+  const f = nodeCenter(from);
+  const wrap = document.getElementById('canvas-wrap').getBoundingClientRect();
+  const tx = e.clientX - wrap.left - offsetX;
+  const ty = e.clientY - wrap.top  - offsetY;
+  tempArrowEl = document.createElementNS('http://www.w3.org/2000/svg','line');
+  tempArrowEl.setAttribute('class','arrow-line temp');
+  tempArrowEl.setAttribute('x1',f.x); tempArrowEl.setAttribute('y1',f.y);
+  tempArrowEl.setAttribute('x2',tx);  tempArrowEl.setAttribute('y2',ty);
+  tempArrowEl.setAttribute('marker-end','url(#arrow-yellow)');
+  svg.appendChild(tempArrowEl);
+}
+
+// ── Conectar nós ──────────────────────────────────────────────────────────────
+function startConnect(nodeId, e){
+  e.stopPropagation();
+  if(connectingFrom === nodeId){ connectingFrom = null; if(tempArrowEl){tempArrowEl.remove();tempArrowEl=null;} return; }
+  connectingFrom = nodeId;
+  showToast('Clique no bloco de destino para conectar', false, true);
+}
+
+function finishConnect(targetId){
+  if(!connectingFrom || connectingFrom === targetId){ cancelConnect(); return; }
+  const from = config.nodes.find(n => n.id === connectingFrom);
+  if(!from) return;
+  if(!from.connections) from.connections = [];
+  const already = from.connections.find(c => c.targetNodeId === targetId);
+  if(!already){
+    from.connections.push({ condition:'always', targetNodeId: targetId });
+  }
+  cancelConnect();
+  renderCanvas();
+  if(selectedNodeId === connectingFrom) renderPanelBody();
+}
+
+function cancelConnect(){
+  connectingFrom = null;
+  if(tempArrowEl){ tempArrowEl.remove(); tempArrowEl=null; }
+}
+
+document.getElementById('canvas-wrap').addEventListener('click', e => {
+  if(e.target === document.getElementById('canvas-wrap') || e.target === document.getElementById('canvas')){
+    if(connectingFrom){ cancelConnect(); return; }
+    selectedNodeId = null;
+    document.querySelectorAll('.flow-node').forEach(el => el.classList.remove('selected'));
+    document.getElementById('panel-body').innerHTML = '<div class="panel-empty">👈 Clique em um bloco para editar</div>';
+  }
+});
+
+// ── Selecionar / Editar nó ────────────────────────────────────────────────────
+function selectNode(id){
+  selectedNodeId = id;
+  document.querySelectorAll('.flow-node').forEach(el => {
+    el.classList.toggle('selected', el.id === 'node-el-'+id);
+  });
+  renderPanelBody();
+}
+
+function renderPanelBody(){
+  const node = config.nodes.find(n => n.id === selectedNodeId);
+  if(!node){ document.getElementById('panel-body').innerHTML='<div class="panel-empty">👈 Clique em um bloco para editar</div>'; return; }
+
+  if(panelTab === 'msg') renderMsgTab(node);
+  else renderConnTab(node);
+}
+
+function renderMsgTab(node){
+  const body = document.getElementById('panel-body');
+  body.innerHTML = `
+    <div class="field">
+      <div class="field-label">Nome do bloco</div>
+      <input type="text" value="${esc(node.label||'')}" oninput="updateNodeLabel(this.value)"/>
+    </div>
+    <div class="field">
+      <div class="field-label">Comportamento após mensagens</div>
+      <select onchange="updateWait(this.value)">
+        <option value="true" ${node.waitForReply?'selected':''}>⏳ Aguarda o cliente responder</option>
+        <option value="false" ${!node.waitForReply?'selected':''}>⚡ Avança automaticamente</option>
+      </select>
+    </div>
+    ${node.waitForReply ? `
+    <div class="field">
+      <div class="field-label">Salvar resposta como variável (opcional)</div>
+      <input type="text" placeholder="ex: nome, objetivo..." value="${esc(node.saveReplyAs||'')}" oninput="updateSaveAs(this.value)"/>
+    </div>` : ''}
+    <div class="field-label" style="margin-bottom:8px">Mensagens</div>
+    <div id="msgs-list">
+      ${(node.messages||[]).map((m,i) => renderMsgItem(m,i)).join('')}
+    </div>
+    <button class="add-msg" onclick="addMsg()">＋ Adicionar mensagem</button>
+    ${config.startNodeId !== node.id ? `<button class="btn btn-ghost" style="width:100%;margin-top:10px;font-size:.78rem" onclick="setStart('${node.id}')">🟢 Definir como bloco inicial</button>` : '<div style="text-align:center;font-size:.75rem;color:var(--green);margin-top:10px">🟢 Este é o bloco inicial</div>'}
+  `;
+}
+
+function renderMsgItem(m, i){
+  const isFile = m.type==='audio'||m.type==='image';
+  return `
+  <div class="msg-item" id="msg-item-${i}">
+    <div class="msg-row">
+      <select onchange="updateMsgType(${i},this.value)">
+        <option value="text" ${m.type==='text'?'selected':''}>💬 Texto</option>
+        <option value="audio" ${m.type==='audio'?'selected':''}>🎵 Áudio</option>
+        <option value="image" ${m.type==='image'?'selected':''}>🖼️ Imagem</option>
+      </select>
+      <input type="number" value="${m.delay||0}" min="0" step="500" title="Delay em ms antes de enviar" onchange="updateMsgDelay(${i},this.value)" style="width:80px"/> ms
+    </div>
+    ${isFile
+      ? `<div style="font-size:.75rem;color:var(--muted);margin-bottom:4px">${esc(m.content)}</div>
+         <label style="display:block;border:1px dashed var(--border);border-radius:6px;padding:8px;text-align:center;cursor:pointer;font-size:.75rem;color:var(--muted)">
+           📂 Trocar arquivo
+           <input type="file" style="display:none" accept="${m.type==='audio'?'audio/*':'image/*'}" onchange="uploadFile(event,${i})"/>
+         </label>`
+      : `<textarea oninput="updateMsgContent(${i},this.value)">${esc(m.content||'')}</textarea>
+         <div style="font-size:.68rem;color:var(--muted);margin-top:3px">Use {nome}, {objetivo} para variáveis salvas</div>`
+    }
+    <div class="msg-actions-row">
+      ${i>0?`<button class="btn btn-ghost btn-xs" onclick="moveMsg(${i},-1)">↑</button>`:''}
+      <button class="btn btn-danger btn-xs" onclick="removeMsg(${i})">✕ Remover</button>
+    </div>
+  </div>`;
+}
+
+function renderConnTab(node){
+  const body = document.getElementById('panel-body');
+  const otherNodes = config.nodes.filter(n => n.id !== node.id);
+  body.innerHTML = `
+    <div style="font-size:.8rem;color:var(--muted);margin-bottom:12px">
+      Define para qual bloco ir após este, com condições opcionais.
+    </div>
+    <div id="conn-list">
+      ${(node.connections||[]).map((c,i) => `
+        <div class="conn-item">
+          <div style="flex:1">
+            <div class="field-label">Condição</div>
+            <input type="text" value="${esc(c.condition||'always')}" placeholder="always / sim / não / contém..." oninput="updateConn(${i},'condition',this.value)" style="margin-bottom:6px"/>
+            <div class="field-label">Vai para</div>
+            <select onchange="updateConn(${i},'targetNodeId',this.value)">
+              ${otherNodes.map(n=>`<option value="${n.id}" ${n.id===c.targetNodeId?'selected':''}>${esc(n.label)}</option>`).join('')}
+            </select>
+          </div>
+          <button class="btn btn-danger btn-xs" onclick="removeConn(${i})" style="align-self:flex-start">✕</button>
+        </div>
+      `).join('')}
+    </div>
+    <button class="add-msg" onclick="addConn()">＋ Adicionar conexão</button>
+    <div style="font-size:.72rem;color:var(--muted);margin-top:12px">
+      💡 Condição <strong>always</strong> = sempre avança.<br>
+      Use <strong>sim</strong>, <strong>não</strong>, ou qualquer palavra que o cliente pode responder.
+    </div>
+  `;
+}
+
+// ── Funções de edição ─────────────────────────────────────────────────────────
+function getSelectedNode(){ return config.nodes.find(n=>n.id===selectedNodeId); }
+
+function updateNodeLabel(v){ const n=getSelectedNode(); if(!n)return; n.label=v; const el=document.querySelector('#node-el-'+n.id+' .node-title'); if(el) el.textContent=v; }
+function updateWait(v){ const n=getSelectedNode(); if(!n)return; n.waitForReply=v==='true'; renderMsgTab(n); refreshNodeEl(n); }
+function updateSaveAs(v){ const n=getSelectedNode(); if(!n)return; n.saveReplyAs=v; }
+function setStart(id){ config.startNodeId=id; renderCanvas(); selectNode(id); }
+
+function addMsg(){ const n=getSelectedNode(); if(!n)return; if(!n.messages)n.messages=[]; n.messages.push({type:'text',content:'',delay:2000}); renderMsgTab(n); }
+function removeMsg(i){ const n=getSelectedNode(); if(!n)return; n.messages.splice(i,1); renderMsgTab(n); refreshNodeEl(n); }
+function moveMsg(i,d){ const n=getSelectedNode(); if(!n)return; const m=n.messages; const t=m[i]; m[i]=m[i+d]; m[i+d]=t; renderMsgTab(n); }
+function updateMsgType(i,v){ const n=getSelectedNode(); if(!n)return; n.messages[i].type=v; if(v!=='text'&&!n.messages[i].content.startsWith('./')){ n.messages[i].content=v==='audio'?'./audios/':'./ProvaSocial/'; } renderMsgTab(n); }
+function updateMsgDelay(i,v){ const n=getSelectedNode(); if(!n)return; n.messages[i].delay=parseInt(v)||0; }
+function updateMsgContent(i,v){ const n=getSelectedNode(); if(!n)return; n.messages[i].content=v; refreshNodeEl(n); }
+
+async function uploadFile(event,i){
+  const file=event.target.files[0]; if(!file)return;
+  const n=getSelectedNode(); if(!n)return;
+  const form=new FormData(); form.append('file',file); form.append('type',n.messages[i].type);
+  const r=await fetch('/api/upload',{method:'POST',body:form});
+  const d=await r.json();
+  if(d.path){ n.messages[i].content=d.path; showToast('✅ '+file.name); renderMsgTab(n); }
+}
+
+function addConn(){ const n=getSelectedNode(); if(!n)return; if(!n.connections)n.connections=[]; const other=config.nodes.find(x=>x.id!==n.id); n.connections.push({condition:'always',targetNodeId:other?other.id:''}); renderConnTab(n); renderAllArrows(); }
+function removeConn(i){ const n=getSelectedNode(); if(!n)return; n.connections.splice(i,1); renderConnTab(n); renderAllArrows(); }
+function updateConn(i,k,v){ const n=getSelectedNode(); if(!n)return; n.connections[i][k]=v; renderAllArrows(); }
+
+function refreshNodeEl(node){
+  const old=document.getElementById('node-el-'+node.id);
+  if(old) old.remove();
+  createNodeEl(node);
+  renderAllArrows();
+}
+
+function deleteNode(id){
+  if(!confirm('Excluir este bloco? As conexões para ele também serão removidas.'))return;
+  config.nodes=config.nodes.filter(n=>n.id!==id);
+  config.nodes.forEach(n=>{ n.connections=(n.connections||[]).filter(c=>c.targetNodeId!==id); });
+  if(config.startNodeId===id) config.startNodeId=config.nodes[0]?.id||'';
+  if(selectedNodeId===id){ selectedNodeId=null; }
+  renderCanvas();
+  renderPanelBody();
+}
+
+function addNode(){
+  const id='node-'+Date.now();
+  const node={ id, label:'Novo Bloco', x:100+Math.random()*300, y:100+Math.random()*200, messages:[{type:'text',content:'',delay:1000}], waitForReply:true, connections:[] };
+  config.nodes.push(node);
+  createNodeEl(node);
+  selectNode(id);
+}
+
+// ── Gatilhos ──────────────────────────────────────────────────────────────────
+function renderTriggers(){
+  const el=document.getElementById('trigger-tags');
+  el.innerHTML=(config.triggerWords||[]).map((w,i)=>`<div class="t-tag">${w}<button onclick="removeTrigger(${i})">×</button></div>`).join('');
+}
+function addTrigger(){ const inp=document.getElementById('new-trigger'); const v=inp.value.trim().toLowerCase(); if(v&&!config.triggerWords.includes(v)){config.triggerWords.push(v);renderTriggers();inp.value='';} }
+function removeTrigger(i){ config.triggerWords.splice(i,1); renderTriggers(); }
+
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+function showTab(name){
+  ['flow','triggers','qr'].forEach(t=>{
+    document.getElementById('panel-'+t).style.display = t===name?'block':'none';
+    const btn=document.getElementById('tab-'+t); if(btn){ btn.style.background=t===name?'var(--accent)':''; btn.style.color=t===name?'#fff':''; }
+  });
+}
+
+function switchPanelTab(name){
+  panelTab=name;
+  document.querySelectorAll('.panel-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('ptab-'+name).classList.add('active');
+  renderPanelBody();
+}
+
+// ── Utils ─────────────────────────────────────────────────────────────────────
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function showToast(msg, isError=false, info=false){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.style.background=isError?'var(--red)':info?'var(--accent)':'var(--green)';
+  t.style.color=isError||info?'#fff':'#000';
+  t.className='toast show';
+  setTimeout(()=>t.className='toast',3000);
+}
+
+// Init tab
+showTab('flow');
 </script>
 </body>
 </html>
