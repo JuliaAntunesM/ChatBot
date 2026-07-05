@@ -37,7 +37,14 @@ const client = new Client({
             '--no-first-run',
             '--no-zygote',
             '--single-process',
-            '--disable-extensions'
+            '--disable-extensions',
+            '--disable-features=site-per-process,TranslateUI,BlinkGenPropertyTrees',
+            '--disable-features=dbus',
+            '--disable-background-networking',
+            '--disable-default-apps',
+            '--disable-sync',
+            '--metrics-recording-only',
+            '--mute-audio'
         ]
     }
 });
