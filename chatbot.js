@@ -150,7 +150,8 @@ client.on('message', async msg => {
         if (!pattern || !pattern.test(msg.body)) return;
 
         const startNode = config.nodes.find(n => n.id === config.startNodeId);
-        if (!startNode) return;
+        console.log(`[FLOW] startNodeId: ${config.startNodeId} | encontrado: ${!!startNode} | total nodes: ${config.nodes.length}`);
+        if (!startNode) { console.log('[FLOW] ERRO: bloco inicial nao encontrado!'); return; }
 
         state.currentNodeId = startNode.id;
         state.waitingReply = false;
